@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<cn.bingoogolapple.flowlayout.BGAFlowLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/MatchWrap"
+    android:layout_alignParentBottom="true"
+    android:padding="4dp"
+    app:fl_horizontalChildGap="4dp"
+    app:fl_isDistributionWhiteSpacing="true"
+    app:fl_verticalChildGap="4dp">
+    <androidx.appcompat.widget.AppCompatButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="开灯"
+        ></androidx.appcompat.widget.AppCompatButton>
+</cn.bingoogolapple.flowlayout.BGAFlowLayout>
