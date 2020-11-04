@@ -1,10 +1,12 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:scanner/congratulation_dialog.dart';
+import 'package:scanner/sign_dialog.dart';
 import 'app_environment/environment.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'app_environment/environment_bloc.dart';
+import 'app_environment/error_envelope.dart';
+import 'order_dialog.dart';
 
 void main() async {
 //  await initializeDateFormatting();
@@ -46,7 +48,7 @@ class _MyAppState extends State<MyApp> {
           title: 'WorkKing',
           theme: ThemeData(
             platform: TargetPlatform.iOS,
-            primaryColor: environment.appearance.colorScheme.primary,
+            primaryColor: Colors.indigo,
           ),
 //          theme: ThemeData(
 //            appBarTheme: AppBarTheme(
@@ -71,50 +73,136 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-class HomeScreen extends StatelessWidget {
+
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+
   static const _nativeChannel = const MethodChannel('com.js.scanner');
+
+  bool _requesting = false;
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       backgroundColor: Color(0xFFDDDDDD),
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text('扫码'),
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: SizedBox(
-          width: 180,
-          height: 50,
-          child: FlatButton(
-              color: Theme.of(context).primaryColor,
-              child: Text('开 始',
-                  style: TextStyle(color: Colors.white, fontSize: 18)),
-              onPressed: () => _scanButtonPressed(context)),
+        child: _requesting ? CupertinoActivityIndicator() :
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 180,
+              height: 50,
+              child: _buildScanButton(context),
+            ),
+            SizedBox(height: 50),
+            SizedBox(
+              width: 180,
+              height: 50,
+              child: _buildSignButton(context),
+            )
+          ],
         ),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 
+  /// 收件
+  Widget _buildScanButton(BuildContext context) {
+    return FlatButton(
+        color: Theme.of(context).primaryColor,
+        child: Text('收 件', style: TextStyle(color: Colors.white, fontSize: 18)),
+        onPressed: () => _scanButtonPressed(context));
+  }
+
+  /// 入库
+  Widget _buildSignButton(BuildContext context) {
+    return FlatButton(
+        color: Theme.of(context).primaryColor,
+        child: Text('入 库', style: TextStyle(color: Colors.white, fontSize: 18)),
+        onPressed: () => _signButtonPressed(context));
+  }
+
+  /// 点击扫码
+  void _signButtonPressed(BuildContext context) async {
+    try {
+      String code = await _nativeChannel.invokeMethod('scan');
+      setState((){
+        _requesting = true;
+      });
+      final order = await BlocProvider.of<EnvironmentBloc>(context).fetchOrderInfo(code);
+      final result = await showSignDetails(context, order, code);
+      setState((){
+        _requesting = false;
+      });
+      if (result) {
+        _signButtonPressed(context);
+      }
+    } catch (error) {
+      setState((){
+        _requesting = false;
+      });
+      final msg = ErrorEnvelope(error).toString();
+      if (msg.contains('已取消') && msg.contains('100')) {
+        return;
+      }
+      _alertOk(context, msg);
+      // await showToast();
+    }
+  }
+
+  /// 点击签收
   void _scanButtonPressed(BuildContext context) async {
     try {
       String code = await _nativeChannel.invokeMethod('scan');
-      final groups = await BlocProvider.of<EnvironmentBloc>(context).fetchScannerInfo(code);
+      setState((){
+        _requesting = true;
+      });
+      final groups = await BlocProvider.of<EnvironmentBloc>(context)
+          .fetchScannerInfo(code);
       final result = await showCongratulationDialog(context, groups);
+      setState((){
+        _requesting = false;
+      });
       if (result) {
         _scanButtonPressed(context);
       }
     } catch (error) {
-      print(error);
+      setState((){
+        _requesting = false;
+      });
+      final msg = ErrorEnvelope(error).toString();
+      if (msg.contains('已取消') && msg.contains('100')) {
+        return;
+      }
+      _alertOk(context, msg);
+      // await showToast();
     }
+  }
+
+  /// 确定
+  void _alertOk(BuildContext context, String message) {
+    var dialog = CupertinoAlertDialog(
+      content: Text(
+        message,
+        style: TextStyle(fontSize: 20),
+      ),
+      actions: <Widget>[
+        CupertinoButton(
+          child: Text('知道了'),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+      ],
+    );
+    showDialog<dynamic>(context: context, builder: (_) => dialog);
   }
 }

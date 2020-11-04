@@ -3,9 +3,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'buttons_bar.dart';
 import 'group.dart';
 
-Future<bool> showCongratulationDialog(BuildContext context, List<Group> groups) {
+Future<bool> showCongratulationDialog(
+    BuildContext context, List<Group> groups) {
   return showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -109,7 +111,7 @@ class CongratulationScreen extends StatelessWidget {
   }
 
   Widget _buildImage(String url) {
-    return Column (
+    return Column(
       children: [
         SizedBox(height: 10),
         CachedNetworkImage(
@@ -166,39 +168,4 @@ class CongratulationScreen extends StatelessWidget {
       ],
     );
   }
-}
-
-class ExpandedButtonsBar extends StatelessWidget {
-  final List<ButtonInfo> buttonInfo;
-
-  ExpandedButtonsBar(this.buttonInfo);
-
-  @override
-  Widget build(BuildContext context) {
-    final buttons = buttonInfo
-        .map((e) => Expanded(
-              flex: 1,
-              child: FlatButton(
-                color: e.backgroundColor,
-                child: Text(e.text,
-                    style: TextStyle(color: e.textColor, fontSize: 15)),
-                onPressed: e.onPressed,
-              ),
-            ))
-        .toList();
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: buttons,
-    );
-  }
-}
-
-class ButtonInfo {
-  final String text;
-  final Color textColor;
-  final Color backgroundColor;
-  final void Function() onPressed;
-
-  const ButtonInfo(
-      {this.text, this.textColor, this.backgroundColor, this.onPressed});
 }

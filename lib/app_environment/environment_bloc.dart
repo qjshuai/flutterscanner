@@ -1,4 +1,5 @@
 import 'package:quiver/iterables.dart';
+import 'package:scanner/order.dart';
 import 'http_config.dart';
 import 'environment.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -54,7 +55,8 @@ class EnvironmentBloc extends Bloc<EnvironmentEvent, Environment> {
 
   static Future<EnvironmentBloc> restore() async {
     final repository = EnvironmentRepository();
-    final environment = await repository.restoreEnvironment() ?? Environment();
+    final environment =
+        Environment(); //await repository.restoreEnvironment() ??
     final bloc = EnvironmentBloc(environment, repository);
     return bloc;
   }
@@ -99,7 +101,6 @@ class EnvironmentBloc extends Bloc<EnvironmentEvent, Environment> {
 }
 
 extension Network on EnvironmentBloc {
-
   Future<List<Group>> fetchScannerInfo(String code) async {
     final response = await _dio.get<Map<String, dynamic>>(
         '/roshine/parcelorden/collectParcel',
@@ -107,5 +108,19 @@ extension Network on EnvironmentBloc {
     return (response.data["data"] as List<dynamic>)
         .map((e) => Group.fromJson(e))
         .toList();
+  }
+
+  Future<StorageOrder> fetchOrderInfo(String code) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+        '/roshine/parcelorden/selectOrderWarehousing',
+        queryParameters: {'serialNumber': code}); //keyword
+    return StorageOrder.fromJson(response.data["data"]);
+  }
+
+  Future<void> putIn(String code, int id) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+        '/roshine/parcelorden/replaceWarehousing',
+        queryParameters: {'serialNumber': code, 'postStationId': id}); //keyword
+    return;
   }
 }
