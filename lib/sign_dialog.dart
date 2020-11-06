@@ -39,8 +39,16 @@ class _SignScreenState extends State<SignScreen> {
 
   @override
   void initState() {
-    _selectedStation = order.stationList
-        .firstWhere((element) => element.id == order.defaultPostStationId);
+    try {
+      _selectedStation = order.stationList
+          .firstWhere((element) => element.id == order.defaultPostStationId);
+    } catch (e) {
+      Fluttertoast.showToast(
+          msg: '无默认驿站, 请选择驿站',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          fontSize: 16.0);
+    }
     super.initState();
   }
 
@@ -209,6 +217,7 @@ class _SignScreenState extends State<SignScreen> {
           // backgroundColor: Colors.red,
           // textColor: Colors.white,
           fontSize: 16.0);
+      return;
     }
     try {
       await BlocProvider.of<EnvironmentBloc>(context)

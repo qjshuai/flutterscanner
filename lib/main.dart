@@ -39,40 +39,21 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<EnvironmentBloc, Environment>(
-      builder: (context, environment) {
-        return MaterialApp(
+    return MaterialApp(
           debugShowCheckedModeBanner: false,
-          title: 'WorkKing',
+          title: 'Scanner',
           theme: ThemeData(
             platform: TargetPlatform.iOS,
             primaryColor: Colors.indigo,
           ),
-//          theme: ThemeData(
-//            appBarTheme: AppBarTheme(
-//              color: environment.appearance.colorScheme.primary,
-////              elevation: 0,
-//              textTheme: environment.appearance.textTheme,
-//            ),
-//            textTheme: environment.appearance.textTheme,
-//            colorScheme: environment.appearance.colorScheme,
-//            brightness: Brightness.light,
-//            errorColor: environment.appearance.colorScheme.error,
-//            backgroundColor: environment.appearance.colorScheme.background,
-//            visualDensity: VisualDensity.adaptivePlatformDensity,
-//            platform: TargetPlatform.iOS,
-//          ),
           themeMode: ThemeMode.light,
-          routes: {},
           home: HomeScreen(),
         );
-      },
-    );
   }
 }
-
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -142,9 +123,9 @@ class _HomeScreenState extends State<HomeScreen> {
       setState((){
         _requesting = false;
       });
-      if (result) {
-        _signButtonPressed(context);
-      }
+      // if (result) {
+      //   _signButtonPressed(context);
+      // }
     } catch (error) {
       setState((){
         _requesting = false;
