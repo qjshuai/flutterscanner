@@ -6,10 +6,10 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:scanner/order.dart';
-import 'app_environment/error_envelope.dart';
 import 'buttons_bar.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:scanner/app_environment/environment_bloc.dart';
+
+import 'error_envelope.dart';
 
 // 入库
 Future<bool> showPutIn(BuildContext context) {
@@ -53,15 +53,15 @@ class _PutInScreenState extends State<PutInScreen> {
       setState(() {
         _onRequesting = true;
       });
-      final order =
-          await BlocProvider.of<EnvironmentBloc>(context).fetchOrderInfo(_code);
+      // final order =
+      //     await BlocProvider.of<EnvironmentBloc>(context).fetchOrderInfo(_code);
       setState(() {
-        _order = order;
-        _putInSuccess = false;
-        _onRequesting = false;
-        _selectedStation = _order.stationList.firstWhere(
-            (element) => element.id == order.defaultPostStationId,
-            orElse: () => null);
+        // _order = order;
+        // _putInSuccess = false;
+        // _onRequesting = false;
+        // _selectedStation = _order.stationList.firstWhere(
+        //     (element) => element.id == order.defaultPostStationId,
+        //     orElse: () => null);
       });
       if (_selectedStation == null) {
         Fluttertoast.showToast(
@@ -287,16 +287,16 @@ class _PutInScreenState extends State<PutInScreen> {
       return;
     }
     try {
-      await BlocProvider.of<EnvironmentBloc>(context)
-          .putIn(_code, _selectedStation.id);
-      Fluttertoast.showToast(
-          msg: '入库成功',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.CENTER,
-          fontSize: 16.0);
-      setState(() {
-        _putInSuccess = true;
-      });
+      // await BlocProvider.of<EnvironmentBloc>(context)
+      //     .putIn(_code, _selectedStation.id);
+      // Fluttertoast.showToast(
+      //     msg: '入库成功',
+      //     toastLength: Toast.LENGTH_SHORT,
+      //     gravity: ToastGravity.CENTER,
+      //     fontSize: 16.0);
+      // setState(() {
+      //   _putInSuccess = true;
+      // });
     } catch (e) {
       final msg = ErrorEnvelope(e).toString();
       if (msg.contains('已取消') && msg.contains('100')) {
