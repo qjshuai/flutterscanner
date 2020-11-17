@@ -35,7 +35,7 @@ class Order {
     if (details.isEmpty) {
       return "无";
     }
-    return details.map((e) => '${e.title}元 ${e.amount}件').join("、");
+    return details.map((e) => '${e.category ?? ''} ${e.title}元 ${e.amount}件').join("、");
   }
 
   Order.fromJson(Map<String, dynamic> json)
@@ -79,8 +79,10 @@ class Feature {
 class Detail {
   final int amount;
   final String title;
+  final String category;
 
   Detail.fromJson(Map<String, dynamic> json)
       : amount = json['amount'] as int,
+        category = json['category'] as String,
         title = json['title'] as String;
 }

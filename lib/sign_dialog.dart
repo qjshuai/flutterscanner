@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:scanner/order.dart';
 import 'app_environment/error_envelope.dart';
@@ -9,98 +11,169 @@ import 'buttons_bar.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:scanner/app_environment/environment_bloc.dart';
 
-Future<bool> showSignDetails(
-    BuildContext context, StorageOrder order, String code) {
+// 入库
+Future<bool> showPutIn(BuildContext context) {
   return showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => SignScreen(order, code));
+      builder: (context) => PutInScreen());
 }
 
-class SignScreen extends StatefulWidget {
-  final StorageOrder order;
-  final String code;
-
-  SignScreen(this.order, this.code);
-
+class PutInScreen extends StatefulWidget {
   @override
-  _SignScreenState createState() => _SignScreenState();
+  _PutInScreenState createState() => _PutInScreenState();
 }
 
-class _SignScreenState extends State<SignScreen> {
-  StorageOrder get order => widget.order;
+class _PutInScreenState extends State<PutInScreen> {
+  static const _nativeChannel = const MethodChannel('com.js.scanner');
+
+  StorageOrder _order;
+  String _code;
   Station _selectedStation;
 
   /// 是否正在选择站点
-  bool onSelecting = false;
+  bool _onSelecting = false;
 
   /// 是否已经入库成功
   bool _putInSuccess = false;
 
+  bool _onRequesting = false;
+
+  bool _bootstrap = false;
+
   @override
   void initState() {
-    try {
-      _selectedStation = order.stationList
-          .firstWhere((element) => element.id == order.defaultPostStationId);
-    } catch (e) {
-      Fluttertoast.showToast(
-          msg: '无默认驿站, 请选择驿站',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.CENTER,
-          fontSize: 16.0);
-    }
     super.initState();
+  }
+
+  /// 点击扫码
+  void _startScan(BuildContext context) async {
+    try {
+      _code = await _nativeChannel.invokeMethod('scan');
+      setState(() {
+        _onRequesting = true;
+      });
+      final order =
+          await BlocProvider.of<EnvironmentBloc>(context).fetchOrderInfo(_code);
+      setState(() {
+        _order = order;
+        _putInSuccess = false;
+        _onRequesting = false;
+        _selectedStation = _order.stationList.firstWhere(
+            (element) => element.id == order.defaultPostStationId,
+            orElse: () => null);
+      });
+      if (_selectedStation == null) {
+        Fluttertoast.showToast(
+            msg: '无默认驿站, 请先选择',
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.CENTER,
+            fontSize: 16.0);
+      }
+    } catch (error) {
+      var msg = ErrorEnvelope(error).toString();
+      if (msg.contains('已取消') && msg.contains('100')) {
+        Navigator.of(context).pop(false);
+        return;
+      }
+      if (msg.contains('Connection failed')) {
+        msg = '网络连接出错, 请检查网络连接';
+      }
+      setState(() {
+        _onRequesting = false;
+      });
+      var dialog = CupertinoAlertDialog(
+        content: Text(
+          msg,
+          style: TextStyle(fontSize: 20),
+        ),
+        actions: <Widget>[
+          CupertinoButton(
+            child: Text('取消'),
+            onPressed: () => Navigator.popUntil(context, (route) {
+              print(route);
+              if (route is MaterialPageRoute) {
+                return route.isFirst;
+              }
+              return false;
+            }),
+          ),
+          CupertinoButton(
+            child: Text('继续扫码'),
+            onPressed: () {
+              Navigator.pop(context);
+              _startScan(context);
+            },
+          ),
+        ],
+      );
+      showDialog<dynamic>(context: context, builder: (_) => dialog);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!_bootstrap) {
+      _bootstrap = true;
+      _startScan(context);
+    }
+    if (_order == null && _onRequesting == false) {
+      return Container();
+    }
     return Dialog(
         insetPadding: EdgeInsets.symmetric(vertical: 150, horizontal: 30),
-        backgroundColor: Colors.white,
-        child: Container(
-          child: Stack(
-            children: [
-              Column(
-                children: [
-                  SizedBox(
-                    height: 40,
-                    child: Center(
-                      child: Text(
-                        '入库信息',
-                        style: Theme.of(context).textTheme.headline6,
-                      ),
+        backgroundColor: _onRequesting ? Colors.transparent : Colors.white,
+        child: _onRequesting
+            ? Center(child: CircularProgressIndicator())
+            : Container(
+                child: Stack(
+                  children: [
+                    Column(
+                      children: [
+                        SizedBox(
+                          height: 40,
+                          child: Center(
+                            child: Text(
+                              '入库信息',
+                              style: Theme.of(context).textTheme.headline6,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          height: 50,
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                          child: _buildSelectedStation(),
+                        ),
+                        Divider(),
+                        Expanded(
+                            child: Padding(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                          child: ListView.builder(
+                              itemBuilder: _buildOrderDetailsCell,
+                              itemCount: (_order.orderDetails ?? []).length),
+                        )),
+                        _buildBottomBar(context),
+                      ],
                     ),
-                  ),
-                  Container(
-                    height: 50,
-                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                    child: _buildSelectedStation(),
-                  ),
-                  Divider(),
-                  Expanded(
-                      child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                    child: ListView.builder(
-                        itemBuilder: _buildOrderDetailsCell,
-                        itemCount: (order.orderDetails ?? []).length),
-                  )),
-                  _buildBottomBar(context),
-                ],
-              ),
-              Positioned(
-                  left: 15, right: 15, top: 90.0, child: _buildStationList())
-            ],
-          ),
-        ));
+                    Positioned(
+                        left: 15,
+                        right: 15,
+                        top: 90.0,
+                        child: _buildStationList())
+                  ],
+                ),
+              ));
   }
 
   Widget _buildOrderDetailsCell(BuildContext context, int index) {
-    final details = order.orderDetails[index];
+    final details = _order.orderDetails[index];
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          '价格： ${details.title}',
+          '${details.category ?? ''} 价格： ${details.title}',
           style: Theme.of(context).textTheme.subtitle1,
         ),
         Text(
@@ -128,19 +201,19 @@ class _SignScreenState extends State<SignScreen> {
       ),
       onTap: () {
         setState(() {
-          onSelecting = true;
+          _onSelecting = true;
         });
       },
     );
   }
 
   Widget _buildStationList() {
-    final list = order.stationList;
+    final list = _order.stationList;
     final rowHeight = 38.0;
-    final length = order.stationList.length;
+    final length = _order.stationList.length;
     final height = (length > 6 ? 6 : length) * rowHeight;
     return Visibility(
-        visible: onSelecting,
+        visible: _onSelecting,
         child: Container(
             height: height,
             decoration: BoxDecoration(
@@ -172,7 +245,7 @@ class _SignScreenState extends State<SignScreen> {
       ),
       onTap: () {
         setState(() {
-          onSelecting = false;
+          _onSelecting = false;
           _selectedStation = station;
         });
       },
@@ -195,16 +268,13 @@ class _SignScreenState extends State<SignScreen> {
           backgroundColor: Theme.of(context).primaryColor,
           onPressed: () {
             if (_putInSuccess) {
-              Navigator.of(context).pop(true);
+              _startScan(context);
             } else {
               _putInStorage();
             }
           }),
     ];
-    return SizedBox(
-      height: 50,
-      child: ExpandedButtonsBar(info),
-    );
+    return SizedBox(height: 50, child: ExpandedButtonsBar(info));
   }
 
   void _putInStorage() async {
@@ -213,22 +283,16 @@ class _SignScreenState extends State<SignScreen> {
           msg: '未选择驿站或者驿站ID无效',
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.CENTER,
-          // timeInSecForIosWeb: 1,
-          // backgroundColor: Colors.red,
-          // textColor: Colors.white,
           fontSize: 16.0);
       return;
     }
     try {
       await BlocProvider.of<EnvironmentBloc>(context)
-          .putIn(widget.code, _selectedStation.id);
+          .putIn(_code, _selectedStation.id);
       Fluttertoast.showToast(
           msg: '入库成功',
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.CENTER,
-          // timeInSecForIosWeb: 1,
-          // backgroundColor: Colors.red,
-          // textColor: Colors.white,
           fontSize: 16.0);
       setState(() {
         _putInSuccess = true;
@@ -243,7 +307,8 @@ class _SignScreenState extends State<SignScreen> {
   }
 
   /// 确定
-  void _alertError(BuildContext context, String message) {
+  void _alertError(BuildContext context, String message,
+      {Function() onConfirm}) {
     var dialog = CupertinoAlertDialog(
       content: Text(
         message,
@@ -253,7 +318,11 @@ class _SignScreenState extends State<SignScreen> {
         CupertinoButton(
           child: Text('知道了'),
           onPressed: () {
-            Navigator.pop(context);
+            if (onConfirm != null) {
+              onConfirm();
+            } else {
+              Navigator.pop(context);
+            }
           },
         ),
       ],

@@ -27,12 +27,14 @@ class Station {
 }
 
 class OrderDetails {
+  final String category;
   final String title;
   final int amount;
 
-  OrderDetails({this.title, this.amount});
+  OrderDetails({this.category, this.title, this.amount});
 
   OrderDetails.fromJson(Map<String, dynamic> json)
       : this.title = json['title'] as String,
+        this.category = json['category'] as String,
         this.amount = json['amount'] as int;
 }

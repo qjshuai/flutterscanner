@@ -39,19 +39,18 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Scanner',
-          theme: ThemeData(
-            platform: TargetPlatform.iOS,
-            primaryColor: Colors.indigo,
-          ),
-          themeMode: ThemeMode.light,
-          home: HomeScreen(),
-        );
+      debugShowCheckedModeBanner: false,
+      title: 'Scanner',
+      theme: ThemeData(
+        platform: TargetPlatform.iOS,
+        primaryColor: Colors.indigo,
+      ),
+      themeMode: ThemeMode.light,
+      home: HomeScreen(),
+    );
   }
 }
 
@@ -61,7 +60,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
   static const _nativeChannel = const MethodChannel('com.js.scanner');
 
   bool _requesting = false;
@@ -74,23 +72,24 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text('扫码'),
       ),
       body: Center(
-        child: _requesting ? CupertinoActivityIndicator() :
-        Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 180,
-              height: 50,
-              child: _buildScanButton(context),
-            ),
-            SizedBox(height: 50),
-            SizedBox(
-              width: 180,
-              height: 50,
-              child: _buildSignButton(context),
-            )
-          ],
-        ),
+        child: _requesting
+            ? CupertinoActivityIndicator()
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 180,
+                    height: 50,
+                    child: _buildScanButton(context),
+                  ),
+                  SizedBox(height: 50),
+                  SizedBox(
+                    width: 180,
+                    height: 50,
+                    child: _buildSignButton(context),
+                  )
+                ],
+              ),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
@@ -108,55 +107,27 @@ class _HomeScreenState extends State<HomeScreen> {
     return FlatButton(
         color: Theme.of(context).primaryColor,
         child: Text('入 库', style: TextStyle(color: Colors.white, fontSize: 18)),
-        onPressed: () => _signButtonPressed(context));
-  }
-
-  /// 点击扫码
-  void _signButtonPressed(BuildContext context) async {
-    try {
-      String code = await _nativeChannel.invokeMethod('scan');
-      setState((){
-        _requesting = true;
-      });
-      final order = await BlocProvider.of<EnvironmentBloc>(context).fetchOrderInfo(code);
-      final result = await showSignDetails(context, order, code);
-      setState((){
-        _requesting = false;
-      });
-      // if (result) {
-      //   _signButtonPressed(context);
-      // }
-    } catch (error) {
-      setState((){
-        _requesting = false;
-      });
-      final msg = ErrorEnvelope(error).toString();
-      if (msg.contains('已取消') && msg.contains('100')) {
-        return;
-      }
-      _alertOk(context, msg);
-      // await showToast();
-    }
+        onPressed: () => showPutIn(context));
   }
 
   /// 点击签收
   void _scanButtonPressed(BuildContext context) async {
     try {
       String code = await _nativeChannel.invokeMethod('scan');
-      setState((){
+      setState(() {
         _requesting = true;
       });
       final groups = await BlocProvider.of<EnvironmentBloc>(context)
           .fetchScannerInfo(code);
       final result = await showCongratulationDialog(context, groups);
-      setState((){
+      setState(() {
         _requesting = false;
       });
       if (result) {
         _scanButtonPressed(context);
       }
     } catch (error) {
-      setState((){
+      setState(() {
         _requesting = false;
       });
       final msg = ErrorEnvelope(error).toString();
