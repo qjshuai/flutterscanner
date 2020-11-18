@@ -1,13 +1,16 @@
-import 'package:environment/request_state.dart';
 import 'package:environment/service_center.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:get/get.dart';
 import 'package:get_it/get_it.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:scanner/adjust/adjust_page.dart';
 import 'package:scanner/home/site.dart';
+import 'package:scanner/receipt/receipt_dialog.dart';
+import 'package:scanner/send/send_dialog.dart';
 import 'package:scanner/station_list_page.dart';
+import 'package:scanner/receipt/receipt_info.dart';
+import 'package:environment/error_wrapper.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -22,11 +25,9 @@ class _HomePageState extends State<HomePage> {
   int _page = 1;
   int _total = 0;
 
-  int get _limit => 20;
-
   Future<Map<String, dynamic>> _fetchSiteList() async {
     final http = GetIt.instance.get<ServiceCenter>().httpService;
-    final response = await http.get('/roshine/poststation/queryStationPage');
+    final response = await http.get('/roshine/poststation/queryStationPage', queryParameters: {'pageNum': _page, 'pageSize': 50});
     final sites = ((response.data['data']) as List<dynamic>)
         .map((e) => Site.fromJson(e))
         .toList();
@@ -37,28 +38,33 @@ class _HomePageState extends State<HomePage> {
 
   void _onRefresh() async {
     _page = 1;
+    setState(() {
+      _sites = [];
+    });
     try {
       final result = await _fetchSiteList();
       _total = result['total'];
       final sites = result['data'];
-      if (sites.isEmpty) {
-        _refreshController.refreshCompleted();
-      } else {
-        _refreshController.refreshCompleted();
-        setState(() {
-          _sites = sites;
-        });
+      setState(() {
+        _sites = sites;
+      });
+      _refreshController.refreshCompleted();
+      if (_sites.length >= _total) {
+        _refreshController.loadNoData();
       }
     } catch (e) {
-      print(e);
-      // Fluttertoast.cancel();
-      // Fluttertoast.showToast(msg: e.toString());
-      _page -= 1;
+      Fluttertoast.cancel();
+      Fluttertoast.showToast(msg: ErrorEnvelope(e).toString());
       _refreshController.refreshFailed();
     }
   }
 
   void _onLoading() async {
+    if (_sites.length >= _total) {
+      _refreshController.refreshCompleted();
+      _refreshController.loadNoData();
+      return;
+    }
     _page += 1;
     try {
       final result = await _fetchSiteList();
@@ -73,7 +79,8 @@ class _HomePageState extends State<HomePage> {
         });
       }
     } catch (e) {
-      print(e);
+      Fluttertoast.cancel();
+      Fluttertoast.showToast(msg: ErrorEnvelope(e).toString());
       _page -= 1;
       _refreshController.loadFailed();
     }
@@ -119,17 +126,17 @@ class _HomePageState extends State<HomePage> {
                       Expanded(
                           child: _buildToolItem(
                               context, '洁衣', 'assets/images/green_3.png',
-                              onPressed: () {})),
+                              onPressed: () => showReceiptDialog(context))),
                       SizedBox(width: 18),
                       Expanded(
                           child: _buildToolItem(
                               context, '派送', 'assets/images/green_2.png',
-                              onPressed: () {})),
+                              onPressed: () => showSendDialog(context))),
                       SizedBox(width: 18),
                       Expanded(
                           child: _buildToolItem(
                               context, '信息调整', 'assets/images/green_1.png',
-                              onPressed: () {})),
+                              onPressed: () => showAdjustDialog(context))),
                     ],
                   ),
                 ),
@@ -149,6 +156,39 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
+    );
+  }
+
+  /// 上方工具栏
+  Widget _buildToolItem(BuildContext context, String title, String icon,
+      {Function() onPressed}) {
+    return CupertinoButton(
+      padding: EdgeInsets.zero,
+      onPressed: onPressed,
+      child: Container(
+          decoration: BoxDecoration(
+              image: DecorationImage(
+            scale: 2.0,
+            image: AssetImage(icon),
+          )),
+          child: Center(
+              child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(height: 13.0),
+              Image.asset(
+                'assets/images/scan.png',
+                scale: 2.0,
+                width: 45.0,
+                height: 45.0,
+              ),
+              SizedBox(height: 13.0),
+              Text(
+                title,
+                style: Theme.of(context).primaryTextTheme.subtitle1,
+              )
+            ],
+          ))),
     );
   }
 
@@ -232,38 +272,5 @@ class _HomePageState extends State<HomePage> {
                 ),
               );
             }));
-  }
-
-  /// 上方工具栏
-  Widget _buildToolItem(BuildContext context, String title, String icon,
-      {Function() onPressed}) {
-    return CupertinoButton(
-      padding: EdgeInsets.zero,
-      onPressed: onPressed,
-      child: Container(
-          decoration: BoxDecoration(
-              image: DecorationImage(
-            scale: 2.0,
-            image: AssetImage(icon),
-          )),
-          child: Center(
-              child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(height: 13.0),
-              Image.asset(
-                'assets/images/scan.png',
-                scale: 2.0,
-                width: 45.0,
-                height: 45.0,
-              ),
-              SizedBox(height: 13.0),
-              Text(
-                title,
-                style: Theme.of(context).primaryTextTheme.subtitle1,
-              )
-            ],
-          ))),
-    );
   }
 }

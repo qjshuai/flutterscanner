@@ -1,39 +1,39 @@
 class StorageOrder {
-  final List<OrderDetails> orderDetails;
+  final List<StorageOrderDetails> orderDetails;
   final int defaultPostStationId;
-  final List<Station> stationList;
+  final List<StorageStation> stationList;
 
   StorageOrder.fromJson(Map<String, dynamic> json)
       : defaultPostStationId = json['defaultPostStationId'] as int,
         orderDetails = (json['orderDetails'] as List<dynamic>)
-            .map((e) => OrderDetails.fromJson(e))
+            .map((e) => StorageOrderDetails.fromJson(e))
             .toList(),
         stationList = (json['stationList'] as List<dynamic>)
-            .map((e) => Station.fromJson(e))
+            .map((e) => StorageStation.fromJson(e))
             .toList();
 }
 
-class Station {
+class StorageStation {
   final int id;
   final String stationName;
   final String tel;
 
-  Station({this.id, this.stationName, this.tel});
+  StorageStation({this.id, this.stationName, this.tel});
 
-  Station.fromJson(Map<String, dynamic> json)
+  StorageStation.fromJson(Map<String, dynamic> json)
       : this.stationName = json['stationName'] as String,
         this.tel = json['tel'] as String,
         this.id = json['id'] as int;
 }
 
-class OrderDetails {
+class StorageOrderDetails {
   final String category;
   final String title;
   final int amount;
 
-  OrderDetails({this.category, this.title, this.amount});
+  StorageOrderDetails({this.category, this.title, this.amount});
 
-  OrderDetails.fromJson(Map<String, dynamic> json)
+  StorageOrderDetails.fromJson(Map<String, dynamic> json)
       : this.title = json['title'] as String,
         this.category = json['category'] as String,
         this.amount = json['amount'] as int;

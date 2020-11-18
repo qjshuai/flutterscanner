@@ -1,44 +1,47 @@
 import 'package:quiver/strings.dart';
 
-class Group {
+class ReceiptInfo {
   final String shortCode;
-  List<Order> orden;
+  List<ReceiptOrder> orders;
 
-  Group.fromJson(Map<String, dynamic> json)
+  ReceiptInfo.fromJson(Map<String, dynamic> json)
       : shortCode = json['shortCode'] as String {
     final featuresJson = json['orden'];
     if (featuresJson != null) {
       if (featuresJson is List<dynamic>) {
-        orden = featuresJson.map((e) => Order.fromJson(e)).toList();
+        orders = featuresJson.map((e) => ReceiptOrder.fromJson(e)).toList();
         return;
       }
     }
-    orden = [];
+    orders = [];
   }
 }
 
-class Order {
+class ReceiptOrder {
   final String nickname;
   final String tel;
   final String orderCode;
-  List<Feature> features;
-  List<Detail> details;
+  List<ReceiptFeature> features;
+  List<ReceiptDetail> details;
   List<String> pics;
 
   String get featuresString {
     if (features.isEmpty) {
       return "无";
     }
-    return features.map((e) => e.name ?? '无').join("、");//.where((element) => isNotEmpty(element.name))
+    return features.map((e) => e.name ?? '无').join("、");
   }
+
   String get detailsString {
     if (details.isEmpty) {
       return "无";
     }
-    return details.map((e) => '${e.category ?? ''} ${e.title}元 ${e.amount}件').join("、");
+    return details
+        .map((e) => '${e.category ?? ''} ${e.title}元 ${e.amount}件')
+        .join("、");
   }
 
-  Order.fromJson(Map<String, dynamic> json)
+  ReceiptOrder.fromJson(Map<String, dynamic> json)
       : nickname = json['nickname'] as String,
         tel = json['tel'] as String,
         orderCode = json['orderCode'] as String {
@@ -47,7 +50,7 @@ class Order {
     final featuresJson = json['features'];
     if (featuresJson != null) {
       if (featuresJson is List<dynamic>) {
-        features = featuresJson.map((e) => Feature.fromJson(e)).toList();
+        features = featuresJson.map((e) => ReceiptFeature.fromJson(e)).toList();
       } else {
         features = [];
       }
@@ -57,7 +60,7 @@ class Order {
     final detailsJson = json['details'];
     if (detailsJson != null) {
       if (detailsJson is List<dynamic>) {
-        details = detailsJson.map((e) => Detail.fromJson(e)).toList();
+        details = detailsJson.map((e) => ReceiptDetail.fromJson(e)).toList();
       } else {
         details = [];
       }
@@ -67,21 +70,21 @@ class Order {
   }
 }
 
-class Feature {
+class ReceiptFeature {
   final int id;
   final String name;
 
-  Feature.fromJson(Map<String, dynamic> json)
+  ReceiptFeature.fromJson(Map<String, dynamic> json)
       : id = json['id'] as int,
         name = json['name'] as String;
 }
 
-class Detail {
+class ReceiptDetail {
   final int amount;
   final String title;
   final String category;
 
-  Detail.fromJson(Map<String, dynamic> json)
+  ReceiptDetail.fromJson(Map<String, dynamic> json)
       : amount = json['amount'] as int,
         category = json['category'] as String,
         title = json['title'] as String;

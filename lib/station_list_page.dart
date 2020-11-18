@@ -2,12 +2,14 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:environment/request_state.dart';
 import 'package:environment/service_center.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:scanner/custom_color.dart';
 import 'package:scanner/home/site.dart';
 
 import 'delivery.dart';
+import 'error_envelope.dart';
 
 class DeliveryListPage extends StatefulWidget {
   final Site site;
@@ -56,7 +58,11 @@ class _DeliveryListPageState extends State<DeliveryListPage> {
   Future<Map<String, dynamic>> _fetchSiteList() async {
     final http = GetIt.instance.get<ServiceCenter>().httpService;
     final response = await http.get('/roshine/poststation/selectReadyReceive',
-        queryParameters: {'id': widget.site.id});
+        queryParameters: {
+          'id': widget.site.id,
+          'pageNum': _page,
+          'pageSize': 50
+        });
     final sites = ((response.data['data']) as List<dynamic>)
         .map((e) => Delivery.fromJson(e))
         .toList();
@@ -67,28 +73,33 @@ class _DeliveryListPageState extends State<DeliveryListPage> {
 
   void _onRefresh() async {
     _page = 1;
+    setState(() {
+      _deliveries = [];
+    });
     try {
       final result = await _fetchSiteList();
       _total = result['total'];
       final deliveries = result['data'];
-      if (deliveries.isEmpty) {
-        _refreshController.refreshCompleted();
-      } else {
-        _refreshController.refreshCompleted();
-        setState(() {
-          _deliveries = deliveries;
-        });
+      setState(() {
+        _deliveries = deliveries;
+      });
+      _refreshController.refreshCompleted();
+      if (_deliveries.length >= _total) {
+        _refreshController.loadNoData();
       }
     } catch (e) {
-      print(e);
-      // Fluttertoast.cancel();
-      // Fluttertoast.showToast(msg: e.toString());
-      _page -= 1;
+      Fluttertoast.cancel();
+      Fluttertoast.showToast(msg: ErrorEnvelope(e).toString());
       _refreshController.refreshFailed();
     }
   }
 
   void _onLoading() async {
+    if (_deliveries.length >= _total) {
+      _refreshController.refreshCompleted();
+      _refreshController.loadNoData();
+      return;
+    }
     _page += 1;
     try {
       final result = await _fetchSiteList();
@@ -103,7 +114,8 @@ class _DeliveryListPageState extends State<DeliveryListPage> {
         });
       }
     } catch (e) {
-      print(e);
+      Fluttertoast.cancel();
+      Fluttertoast.showToast(msg: ErrorEnvelope(e).toString());
       _page -= 1;
       _refreshController.loadFailed();
     }

@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:environment/app_bloc.dart';
 import 'package:environment/app_repository.dart';
 import 'package:environment/app_state.dart';
@@ -12,8 +11,8 @@ import 'package:environment/settings.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
-import 'package:scanner/sign_dialog.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
@@ -21,8 +20,6 @@ import 'bloc_observer.dart';
 import 'custom_color.dart';
 import 'error_envelope.dart';
 import 'home/home_page.dart';
-import 'home_screen.dart';
-import 'order_dialog.dart';
 
 Future<List<BlocProvider>> setup() async {
   try {
@@ -44,7 +41,7 @@ Future<List<BlocProvider>> setup() async {
           name: 'development',
           baseUrl: 'http://172.16.178.16:8081',
           isDebug: true,
-          logMode: LogMode.normal);
+          logMode: LogMode.verbose);
       defaultState = AppState(settings: settings, environment: env);
     }
     AppState appState = await AppRepository.fromStorage(preferenceBox);
@@ -75,7 +72,8 @@ Future<List<BlocProvider>> setup() async {
       ),
     ];
   } catch (e) {
-    print('error $e');
+    Fluttertoast.cancel();
+    Fluttertoast.showToast(msg: ErrorEnvelope(e).toString());
     await SystemChannels.platform.invokeMethod('SystemNavigator.pop');
     return null;
   }
@@ -98,6 +96,9 @@ Future<Null> main() async {
   );
 
   runZonedGuarded(() => runApp(app), (Object error, StackTrace stackTrace) {
+    Fluttertoast.cancel();
+    Fluttertoast.showToast(msg: ErrorEnvelope(error).toString());
+
     if (!inProduction) {
       print(error);
       print(stackTrace);
@@ -142,7 +143,8 @@ class _MyAppState extends State<MyApp> {
                 fontSize: 25.0,
                 color: Colors.white,
                 fontWeight: FontWeight.w500),
-            headline6: TextStyle( //bar
+            headline6: TextStyle(
+                //bar
                 fontSize: 18.0,
                 color: Colors.white,
                 fontWeight: FontWeight.w500),
@@ -164,4 +166,3 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
-

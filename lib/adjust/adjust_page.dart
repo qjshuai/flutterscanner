@@ -3,21 +3,27 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'buttons_bar.dart';
-import 'group.dart';
+import 'package:scanner/receipt/receipt_info.dart';
+import '../buttons_bar.dart';
 
-Future<bool> showCongratulationDialog(
-    BuildContext context, List<Group> groups) {
+/// 收件
+Future<bool> showAdjustDialog(BuildContext context) {
   return showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => CongratulationScreen(groups));
+      builder: (context) => ReceiptDialog());
 }
 
-class CongratulationScreen extends StatelessWidget {
-  final List<Group> groups;
+class ReceiptDialog extends StatefulWidget {
 
-  CongratulationScreen(this.groups);
+  @override
+  _ReceiptDialogState createState() => _ReceiptDialogState();
+}
+
+class _ReceiptDialogState extends State<ReceiptDialog> {
+  List<ReceiptInfo> groups = [];
+
+  // final info = await _fetchReceiptInfo(code);
 
   @override
   Widget build(BuildContext context) {
@@ -29,10 +35,10 @@ class CongratulationScreen extends StatelessWidget {
             children: [
               Expanded(
                   child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                child: ListView.builder(
-                    itemBuilder: buildGroupCell, itemCount: groups.length),
-              )),
+                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                    child: ListView.builder(
+                        itemBuilder: buildGroupCell, itemCount: groups.length),
+                  )),
               _buildBottomBar(context),
             ],
           ),
@@ -89,7 +95,7 @@ class CongratulationScreen extends StatelessWidget {
 
     /// 订单详细信息
     final orders =
-        group.orden.map((order) => _buildOrderCell(context, order)).toList();
+    group.orders.map((order) => _buildOrderCell(context, order)).toList();
     children.addAll(orders);
     //分隔线
     children.add(Divider(color: Colors.grey));
@@ -102,7 +108,7 @@ class CongratulationScreen extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildImages(Order order) {
+  List<Widget> _buildImages(ReceiptOrder order) {
     //添加图片
     if (order.pics.isNotEmpty) {
       return order.pics.map(_buildImage).toList();
@@ -123,7 +129,7 @@ class CongratulationScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildOrderCell(BuildContext context, Order order) {
+  Widget _buildOrderCell(BuildContext context, ReceiptOrder order) {
     var children = [
       Divider(),
       _buildCell('客户名', order.nickname ?? ''),

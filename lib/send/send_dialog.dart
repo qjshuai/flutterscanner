@@ -5,51 +5,44 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:scanner/order.dart';
-import 'buttons_bar.dart';
+import 'package:scanner/send/storage_order.dart';
+import '../buttons_bar.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import 'error_envelope.dart';
+import '../error_envelope.dart';
 
 // 入库
-Future<bool> showPutIn(BuildContext context) {
+Future<bool> showSendDialog(BuildContext context) {
   return showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => PutInScreen());
+      builder: (context) => SendDialog());
 }
 
-class PutInScreen extends StatefulWidget {
+
+class SendDialog extends StatefulWidget {
+
   @override
-  _PutInScreenState createState() => _PutInScreenState();
+  _SendDialogState createState() => _SendDialogState();
 }
 
-class _PutInScreenState extends State<PutInScreen> {
+class _SendDialogState extends State<SendDialog> {
   static const _nativeChannel = const MethodChannel('com.js.scanner');
 
   StorageOrder _order;
-  String _code;
-  Station _selectedStation;
+  StorageStation _selectedStation;
 
   /// 是否正在选择站点
   bool _onSelecting = false;
 
   /// 是否已经入库成功
   bool _putInSuccess = false;
-
   bool _onRequesting = false;
-
   bool _bootstrap = false;
-
-  @override
-  void initState() {
-    super.initState();
-  }
 
   /// 点击扫码
   void _startScan(BuildContext context) async {
     try {
-      _code = await _nativeChannel.invokeMethod('scan');
+      // _code = await _nativeChannel.invokeMethod('scan');
       setState(() {
         _onRequesting = true;
       });
@@ -227,7 +220,7 @@ class _PutInScreenState extends State<PutInScreen> {
             )));
   }
 
-  Widget _buildStationCell(BuildContext context, Station station, int index) {
+  Widget _buildStationCell(BuildContext context, StorageStation station, int index) {
     return InkWell(
       child: Center(
         child: Container(
