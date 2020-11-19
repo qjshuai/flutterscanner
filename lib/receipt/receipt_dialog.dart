@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:get_it/get_it.dart';
+import 'package:quiver/strings.dart';
 import 'package:scanner/receipt/receipt_info.dart';
 import 'package:scanner/widgets/alert.dart';
 import 'package:scanner/utils/constants.dart';
@@ -43,21 +44,23 @@ class _ReceiptDialogState extends State<ReceiptDialog> {
     String code;
     try {
       code = await nativeChannel.invokeMethod('scan');
-      print('扫码成功');
-    } catch (e) {
-      String msg = ErrorEnvelope(e).toString();
-      if (msg.contains('已取消') && msg.contains('100')) {
+      if (isEmpty(code)) {
         Navigator.of(context).pop();
         print('取消扫码');
         return; //取消扫码不做提示, 退出即可
       }
+      print('扫码成功');
+    } catch (e) {
+      String msg = ErrorEnvelope(e).toString();
       print('扫码出错');
       showErrorDialog(context, msg);
       return;
     }
     //开始获取信息
     print('开始获取订单信息');
-    _scanState = FetchingState();
+    setState(() {
+      _scanState = FetchingState();
+    });
     try {
       final groups = await _fetchReceiptInfo(code);
       print('获取订单信息成功');
@@ -68,7 +71,9 @@ class _ReceiptDialogState extends State<ReceiptDialog> {
     } catch (e) {
       print('获取订单信息出错');
       String msg = ErrorEnvelope(e).toString();
-      _scanState = FetchingErrorState(msg);
+      setState(() {
+        _scanState = FetchingErrorState(msg);
+      });
       showAlertDialog(context, msg, onRetry: _startScan);
     }
   }
@@ -87,10 +92,10 @@ class _ReceiptDialogState extends State<ReceiptDialog> {
   @override
   Widget build(BuildContext context) {
     Widget child;
-    if (_scanState is ScanningState) {
+    if (_scanState is ScanningState || _scanState is FetchingErrorState) {
       child = null;
-    } else if (_scanState is FetchingState) {
-      child = CircularProgressIndicator();
+    } else if (_scanState is FetchingState ) {
+      child = Center(child: CircularProgressIndicator());
     } else {
       child = Container(
         decoration: BoxDecoration(

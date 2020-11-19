@@ -1,4 +1,5 @@
 class SendOrder {
+  final String orderIds;
   final List<SendOrderDetails> orderDetails;
   final int defaultPostStationId;
   final List<SendStation> stationList;
@@ -8,13 +9,37 @@ class SendOrder {
 
   SendOrder.fromJson(Map<String, dynamic> json)
       : defaultPostStationId = json['defaultPostStationId'],
-        actuallyPrice = json['actuallyPrice'],
+        orderIds = null,
+        actuallyPrice = checkDouble(json['actuallyPrice']),
         orderDetails = (json['orderDetails'] as List<dynamic>)
             .map((e) => SendOrderDetails.fromJson(e))
             .toList(),
         stationList = (json['stationList'] as List<dynamic>)
             .map((e) => SendStation.fromJson(e))
             .toList();
+
+  SendOrder.fromAdjustJson(Map<String, dynamic> json)
+      : defaultPostStationId = json['defaultPostStationId'],
+        actuallyPrice = checkDouble(json['actuallyPrice']),
+        orderIds = json['orderIds'],
+        orderDetails = (json['details'] as List<dynamic>)
+            .map((e) => SendOrderDetails.fromJson(e))
+            .toList(),
+        stationList = (json['stationList'] as List<dynamic>)
+            .map((e) => SendStation.fromJson(e))
+            .toList();
+}
+
+double checkDouble(dynamic value) {
+  if (value is String) {
+    return double.tryParse(value);
+  } else if (value is int) {
+    return value.toDouble();
+  } else if (value is double) {
+    return value;
+  } else {
+    return 0;
+  }
 }
 
 class SendStation {

@@ -67,7 +67,7 @@ public class MainActivity extends FlutterActivity implements EasyPermissions.Per
                 MainActivity.this.result.success(code);
                 MainActivity.this.result = null;
             } else if (action.equals("scan_cancel")) {
-                MainActivity.this.result.error("100", "已取消", "");
+                MainActivity.this.result.success("");
                 MainActivity.this.result = null;
             }
         }

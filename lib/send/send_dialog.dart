@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:get_it/get_it.dart';
+import 'package:quiver/strings.dart';
 import 'package:scanner/send/storage_order.dart';
 import 'package:scanner/utils/constants.dart';
 import 'package:scanner/utils/scan_state.dart';
@@ -19,8 +20,8 @@ Future<bool> showSendDialog(BuildContext context, SendMode mode) {
   return showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => WillPopScope(onWillPop: () => Future.value(false),
-      child: SendDialog(mode)));
+      builder: (context) => WillPopScope(
+          onWillPop: () => Future.value(false), child: SendDialog(mode)));
 }
 
 class SendDialog extends StatefulWidget {
@@ -55,21 +56,23 @@ class _SendDialogState extends State<SendDialog> {
     String code;
     try {
       code = await nativeChannel.invokeMethod('scan');
-      print('扫码成功');
-    } catch (e) {
-      String msg = ErrorEnvelope(e).toString();
-      if (msg.contains('已取消') && msg.contains('100')) {
+      if (isEmpty(code)) {
         Navigator.of(context).pop();
         print('取消扫码');
         return; //取消扫码不做提示, 退出即可
       }
+      print('扫码成功');
+    } catch (e) {
+      String msg = ErrorEnvelope(e).toString();
       print('扫码出错');
       showErrorDialog(context, msg);
       return;
     }
     //开始获取信息
     print('开始获取订单信息');
-    _scanState = FetchingState();
+   setState(() {
+     _scanState = FetchingState();
+   });
     try {
       final order = await _fetchOrder(code);
       print('获取订单信息成功');
@@ -81,7 +84,9 @@ class _SendDialogState extends State<SendDialog> {
     } catch (e) {
       print('获取订单信息出错');
       String msg = ErrorEnvelope(e).toString();
-      _scanState = FetchingErrorState(msg);
+      setState(() {
+        _scanState = FetchingErrorState(msg);
+      });
       showAlertDialog(context, msg, onRetry: _startScan);
     }
   }
@@ -92,10 +97,15 @@ class _SendDialogState extends State<SendDialog> {
     if (widget.mode == SendMode.send) {
       path = '/roshine/parcelorden/selectOrderWarehousing';
     }
-    final response = await http.get<Map<String, dynamic>>(
-        path,
+    final response = await http.get<Map<String, dynamic>>(path,
         queryParameters: {'serialNumber': code}); //keyword
-    final order = SendOrder.fromJson(response.data["data"]);
+    // await Future.delayed(Duration(seconds: 1));
+    SendOrder order;
+    if (widget.mode == SendMode.send) {
+      order = SendOrder.fromJson(response.data["data"]);
+    } else {
+      order = SendOrder.fromAdjustJson(response.data["data"]);
+    }
     order.code = code;
     order.selectedStation = order.stationList.firstWhere(
         (element) => element.id == order.defaultPostStationId,
@@ -106,10 +116,11 @@ class _SendDialogState extends State<SendDialog> {
   @override
   Widget build(BuildContext context) {
     Widget child;
-    if (_scanState is ScanningState) {
+    if (_scanState is ScanningState || _scanState is FetchingErrorState) {
       child = null;
-    } else if (_scanState is FetchingState) {
-      child = CircularProgressIndicator();
+    } else if (_scanState is FetchingState || _scanState is SubmittingState) {
+      print('显示loading');
+      child = Center(child: CircularProgressIndicator());
     } else {
       child = Container(
         decoration: BoxDecoration(
@@ -214,8 +225,8 @@ class _SendDialogState extends State<SendDialog> {
   }
 
   String get orderTitle {
-    return( _order?.orderDetails ?? [])
-        .map((e) => '${e.category}${e.title}${e.amount}件')
+    return (_order?.orderDetails ?? [])
+        .map((e) => '${e.category}${e.title}${e.amount}元洁衣区 件')
         .join('、');
   }
 
@@ -306,7 +317,7 @@ class _SendDialogState extends State<SendDialog> {
   Widget _buildBottomBar(BuildContext context) {
     final info = [
       ButtonInfo(
-          text: '取消',
+          text: _scanState is SubmitSuccessState ? '关闭' : '取消',
           textColor: Colors.white,
           backgroundColor: Color(0xFF7C9A92),
           onPressed: () {
@@ -343,15 +354,22 @@ class _SendDialogState extends State<SendDialog> {
       return;
     }
     try {
+      setState(() {
+        _scanState = SubmittingState();
+      });
       final http = GetIt.instance.get<ServiceCenter>().httpService;
       await http.get<Map<String, dynamic>>(
           '/roshine/parcelorden/replaceWarehousing',
           queryParameters: {'serialNumber': _order.code, 'postStationId': id});
+      // await Future.delayed(Duration(seconds: 1));
       showToast('入库成功');
       setState(() {
         _scanState = SubmitSuccessState();
       });
     } catch (e) {
+      setState(() {
+        _scanState = FetchSuccessState();
+      });
       final msg = ErrorEnvelope(e).toString();
       showErrorDialog(context, msg);
     }
@@ -368,15 +386,22 @@ class _SendDialogState extends State<SendDialog> {
       return;
     }
     try {
+      setState(() {
+        _scanState = SubmittingState();
+      });
       final http = GetIt.instance.get<ServiceCenter>().httpService;
       await http.get<Map<String, dynamic>>(
           '/roshine/parcelorden/updateOrderPostOut',
-          queryParameters: {'orderIds': _order.code, ' stationId': id});
+          queryParameters: {'orderIds': _order.orderIds, 'stationId': id});
+      // await Future.delayed(Duration(seconds: 1));
       showToast('更改成功');
       setState(() {
         _scanState = SubmitSuccessState();
       });
     } catch (e) {
+      setState(() {
+        _scanState = FetchSuccessState();
+      });
       final msg = ErrorEnvelope(e).toString();
       showErrorDialog(context, msg);
     }

@@ -2,6 +2,7 @@
 /// 扫码状态
 abstract class ScanState {}
 
+/// 首次扫码
 class ScanningState implements ScanState {}
 
 /// 扫码错误
@@ -24,12 +25,7 @@ class FetchingErrorState implements ScanState {
 /// 获取订单信息成功, 仅不需要提交的订单
 class FetchSuccessState implements ScanState {}
 
+class SubmittingState implements ScanState {}
+
 /// 获取订单信息成功 正在提交
 class SubmitSuccessState implements ScanState {}
-
-/// 提交成功
-class SubmittingErrorState implements ScanState {
-  final String error;
-
-  SubmittingErrorState(this.error);
-}

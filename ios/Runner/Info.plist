@@ -4,6 +4,8 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Scanner</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -41,5 +43,11 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>需要使用您的相机功能以便扫描二维码或拍摄照片</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>需要获取图片添加权限以便将该图片保存到相册中</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>需要访问您的相册获取图片用于识别二维码</string>
 </dict>
 </plist>
