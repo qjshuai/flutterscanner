@@ -27,7 +27,7 @@ void showAlertDialog(
       ),
     ],
   );
-  showDialog(context: context, builder: (_) => dialog);
+  showDialog(context: context, builder: (_) => WillPopScope(child: dialog, onWillPop: () async => false));
 }
 
 void showErrorDialog(BuildContext context, String message,
@@ -50,5 +50,5 @@ void showErrorDialog(BuildContext context, String message,
       ),
     ],
   );
-  showDialog<dynamic>(context: context, builder: (_) => dialog);
+  showDialog<dynamic>(context: context, builder: (_) => WillPopScope(child: dialog, onWillPop: () async => false));
 }

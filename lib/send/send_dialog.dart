@@ -1,42 +1,46 @@
-import 'dart:io';
 import 'dart:ui';
+import 'package:environment/service_center.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:get_it/get_it.dart';
 import 'package:scanner/send/storage_order.dart';
+import 'package:scanner/utils/constants.dart';
 import 'package:scanner/utils/scan_state.dart';
+import 'package:scanner/widgets/alert.dart';
+import 'package:scanner/widgets/toast.dart';
 import '../widgets/buttons_bar.dart';
 import '../utils/error_envelope.dart';
 
+enum SendMode { send, adjust }
+
 // 发件入库
-Future<bool> showSendDialog(BuildContext context) {
+Future<bool> showSendDialog(BuildContext context, SendMode mode) {
   return showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => SendDialog());
+      builder: (context) => WillPopScope(onWillPop: () => Future.value(false),
+      child: SendDialog(mode)));
 }
 
 class SendDialog extends StatefulWidget {
+  final SendMode mode;
+
+  SendDialog(this.mode);
+
   @override
   _SendDialogState createState() => _SendDialogState();
 }
 
 class _SendDialogState extends State<SendDialog> {
-
   ScanState _scanState = ScanningState();
 
-  StorageOrder _order;
-  StorageStation _selectedStation;
+  SendOrder _order;
+
+  SendStation get _selectedStation => _order?.selectedStation;
 
   /// 是否正在选择站点
   bool _onSelecting = false;
-
-  /// 是否已经入库成功
-  bool _putInSuccess = false;
-  bool _onRequesting = false;
-  bool _bootstrap = false;
 
   @override
   void initState() {
@@ -46,158 +50,198 @@ class _SendDialogState extends State<SendDialog> {
     _startScan();
   }
 
-  /// 点击扫码
-  void _startScan(BuildContext context) async {
+  void _startScan() async {
+    print('开始扫码');
+    String code;
     try {
-      // _code = await _nativeChannel.invokeMethod('scan');
-      setState(() {
-        _onRequesting = true;
-      });
-      // final order =
-      //     await BlocProvider.of<EnvironmentBloc>(context).fetchOrderInfo(_code);
-      setState(() {
-        // _order = order;
-        // _putInSuccess = false;
-        // _onRequesting = false;
-        // _selectedStation = _order.stationList.firstWhere(
-        //     (element) => element.id == order.defaultPostStationId,
-        //     orElse: () => null);
-      });
-      if (_selectedStation == null) {
-        Fluttertoast.showToast(
-            msg: '无默认驿站, 请先选择',
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.CENTER,
-            fontSize: 16.0);
-      }
-    } catch (error) {
-      var msg = ErrorEnvelope(error).toString();
+      code = await nativeChannel.invokeMethod('scan');
+      print('扫码成功');
+    } catch (e) {
+      String msg = ErrorEnvelope(e).toString();
       if (msg.contains('已取消') && msg.contains('100')) {
-        Navigator.of(context).pop(false);
-        return;
+        Navigator.of(context).pop();
+        print('取消扫码');
+        return; //取消扫码不做提示, 退出即可
       }
-      if (msg.contains('Connection failed')) {
-        msg = '网络连接出错, 请检查网络连接';
-      }
-      setState(() {
-        _onRequesting = false;
-      });
-      var dialog = CupertinoAlertDialog(
-        content: Text(
-          msg,
-          style: TextStyle(fontSize: 20),
-        ),
-        actions: <Widget>[
-          CupertinoButton(
-            child: Text('取消'),
-            onPressed: () => Navigator.popUntil(context, (route) {
-              print(route);
-              if (route is MaterialPageRoute) {
-                return route.isFirst;
-              }
-              return false;
-            }),
-          ),
-          CupertinoButton(
-            child: Text('继续扫码'),
-            onPressed: () {
-              Navigator.pop(context);
-              _startScan(context);
-            },
-          ),
-        ],
-      );
-      showDialog<dynamic>(context: context, builder: (_) => dialog);
+      print('扫码出错');
+      showErrorDialog(context, msg);
+      return;
     }
+    //开始获取信息
+    print('开始获取订单信息');
+    _scanState = FetchingState();
+    try {
+      final order = await _fetchOrder(code);
+      print('获取订单信息成功');
+
+      setState(() {
+        this._order = order;
+        _scanState = FetchSuccessState();
+      });
+    } catch (e) {
+      print('获取订单信息出错');
+      String msg = ErrorEnvelope(e).toString();
+      _scanState = FetchingErrorState(msg);
+      showAlertDialog(context, msg, onRetry: _startScan);
+    }
+  }
+
+  Future<SendOrder> _fetchOrder(String code) async {
+    final http = GetIt.instance.get<ServiceCenter>().httpService;
+    String path = '/roshine/parcelorden/selectStationBySerialNumber';
+    if (widget.mode == SendMode.send) {
+      path = '/roshine/parcelorden/selectOrderWarehousing';
+    }
+    final response = await http.get<Map<String, dynamic>>(
+        path,
+        queryParameters: {'serialNumber': code}); //keyword
+    final order = SendOrder.fromJson(response.data["data"]);
+    order.code = code;
+    order.selectedStation = order.stationList.firstWhere(
+        (element) => element.id == order.defaultPostStationId,
+        orElse: () => null);
+    return order;
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_bootstrap) {
-      _bootstrap = true;
-      _startScan(context);
-    }
-    if (_order == null && _onRequesting == false) {
-      return Container();
-    }
-    return Dialog(
-        insetPadding: EdgeInsets.symmetric(vertical: 150, horizontal: 30),
-        backgroundColor: _onRequesting ? Colors.transparent : Colors.white,
-        child: _onRequesting
-            ? Center(child: CircularProgressIndicator())
-            : Container(
-                child: Stack(
+    Widget child;
+    if (_scanState is ScanningState) {
+      child = null;
+    } else if (_scanState is FetchingState) {
+      child = CircularProgressIndicator();
+    } else {
+      child = Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10.0),
+          color: Colors.white,
+        ),
+        padding: EdgeInsets.all(20.0),
+        child: Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 24),
+                SizedBox(
+                    height: 35.0,
+                    child: Text(
+                      widget.mode == SendMode.send ? '入库信息' : '信息调整',
+                      style:
+                          TextStyle(color: Color(0xFF253334), fontSize: 25.0),
+                    )),
+                SizedBox(height: 40),
+                Divider(height: 1),
+                SizedBox(height: 24),
+                Container(
+                  height: 60,
+                  child: _buildSelectedStation(),
+                ),
+                SizedBox(height: 30),
+                Text(
+                  orderTitle,
+                  style: TextStyle(
+                      color: Theme.of(context).primaryColor,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500),
+                ),
+                Text(
+                  '洁品信息',
+                  style: TextStyle(
+                    color: Color(0xFF8C9C9D),
+                    fontSize: 13,
+                  ),
+                ),
+                SizedBox(height: 20),
+                Row(
                   children: [
-                    Column(
+                    Expanded(
+                        child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(
-                          height: 40,
-                          child: Center(
-                            child: Text(
-                              '入库信息',
-                              style: Theme.of(context).textTheme.headline6,
-                            ),
+                        Text(
+                          '${_order?.actuallyPrice ?? 0}',
+                          style: TextStyle(
+                              color: Theme.of(context).primaryColor,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500),
+                        ),
+                        Text(
+                          '价格',
+                          style: TextStyle(
+                            color: Color(0xFF8C9C9D),
+                            fontSize: 13,
                           ),
                         ),
-                        Container(
-                          height: 50,
-                          padding:
-                              EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                          child: _buildSelectedStation(),
-                        ),
-                        Divider(),
-                        Expanded(
-                            child: Padding(
-                          padding:
-                              EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                          child: ListView.builder(
-                              itemBuilder: _buildOrderDetailsCell,
-                              itemCount: (_order.orderDetails ?? []).length),
-                        )),
-                        _buildBottomBar(context),
                       ],
-                    ),
-                    Positioned(
-                        left: 15,
-                        right: 15,
-                        top: 90.0,
-                        child: _buildStationList())
+                    )),
+                    Expanded(
+                        child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${_order?.orderDetails?.length ?? 0}',
+                          style: TextStyle(
+                              color: Theme.of(context).primaryColor,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500),
+                        ),
+                        Text(
+                          '数量',
+                          style: TextStyle(
+                            color: Color(0xFF8C9C9D),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    )),
                   ],
                 ),
-              ));
+                Spacer(),
+                _buildBottomBar(context),
+              ],
+            ),
+            Positioned(
+                left: 0, right: 0, top: 190.0, child: _buildStationList())
+          ],
+        ),
+      );
+    }
+    return Dialog(
+        insetPadding: EdgeInsets.symmetric(vertical: 50, horizontal: 30),
+        backgroundColor: Colors.transparent,
+        child: child);
   }
 
-  Widget _buildOrderDetailsCell(BuildContext context, int index) {
-    final details = _order.orderDetails[index];
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          '${details.category ?? ''} 价格： ${details.title}',
-          style: Theme.of(context).textTheme.subtitle1,
-        ),
-        Text(
-          '数量： ${details.amount}',
-          style: Theme.of(context).textTheme.subtitle2,
-        ),
-      ],
-    );
+  String get orderTitle {
+    return( _order?.orderDetails ?? [])
+        .map((e) => '${e.category}${e.title}${e.amount}件')
+        .join('、');
   }
 
   Widget _buildSelectedStation() {
     return InkWell(
-      child: Row(
-        children: [
-          Text(
-            _selectedStation?.stationName ?? '点击选择驿站',
-            style: Theme.of(context).textTheme.subtitle1,
-          ),
-          Spacer(),
-          Icon(
-            Icons.arrow_forward_ios_outlined,
-            size: 15,
-          )
-        ],
+      child: Container(
+        decoration: BoxDecoration(
+            color: Color(0xFFF0F5F4),
+            borderRadius: BorderRadius.circular(10.0)),
+        padding: EdgeInsets.only(left: 18.0, right: 10.0),
+        child: Row(
+          children: [
+            Text(
+              _selectedStation?.stationName ?? '点击选择驿站',
+              style: TextStyle(
+                  color: Theme.of(context).primaryColor,
+                  fontSize: 15.0,
+                  fontWeight: FontWeight.w600),
+            ),
+            Spacer(),
+            Icon(
+              Icons.arrow_forward_ios_outlined,
+              size: 15,
+            )
+          ],
+        ),
       ),
       onTap: () {
         setState(() {
@@ -208,16 +252,17 @@ class _SendDialogState extends State<SendDialog> {
   }
 
   Widget _buildStationList() {
-    final list = _order.stationList;
-    final rowHeight = 38.0;
-    final length = _order.stationList.length;
+    final list = _order?.stationList ?? [];
+    final rowHeight = 60.0;
+    final length = list.length;
     final height = (length > 6 ? 6 : length) * rowHeight;
     return Visibility(
         visible: _onSelecting,
         child: Container(
             height: height,
             decoration: BoxDecoration(
-                color: Colors.indigo, borderRadius: BorderRadius.circular(4)),
+                color: Theme.of(context).primaryColor,
+                borderRadius: BorderRadius.circular(10.0)),
             child: ListView.builder(
               padding: EdgeInsets.symmetric(horizontal: 10),
               itemBuilder: (context, index) =>
@@ -227,26 +272,31 @@ class _SendDialogState extends State<SendDialog> {
             )));
   }
 
-  Widget _buildStationCell(BuildContext context, StorageStation station, int index) {
+  Widget _buildStationCell(
+      BuildContext context, SendStation station, int index) {
     return InkWell(
-      child: Center(
-        child: Container(
-          width: double.infinity,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(station.stationName, style: TextStyle(color: Colors.white)),
-              Visibility(
-                  visible: station == _selectedStation,
-                  child: Icon(Icons.check, color: Colors.white))
-            ],
-          ),
+      child: Container(
+        decoration: BoxDecoration(
+            border: Border(
+                bottom: BorderSide(
+                    color: index == (_order.stationList.length - 1)
+                        ? Colors.transparent
+                        : Color(0xFF364445)))),
+        width: double.infinity,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(station.stationName, style: TextStyle(color: Colors.white)),
+            Visibility(
+                visible: station == _selectedStation,
+                child: Icon(Icons.check, color: Colors.white))
+          ],
         ),
       ),
       onTap: () {
         setState(() {
           _onSelecting = false;
-          _selectedStation = station;
+          _order.selectedStation = station;
         });
       },
     );
@@ -256,77 +306,79 @@ class _SendDialogState extends State<SendDialog> {
   Widget _buildBottomBar(BuildContext context) {
     final info = [
       ButtonInfo(
-          text: '完成',
+          text: '取消',
           textColor: Colors.white,
-          backgroundColor: Color(0xFF8FA6C9),
+          backgroundColor: Color(0xFF7C9A92),
           onPressed: () {
             Navigator.of(context).pop(false);
           }),
       ButtonInfo(
-          text: _putInSuccess ? '继续扫码' : '入库',
+          text: _scanState is SubmitSuccessState
+              ? '继续扫码'
+              : (widget.mode == SendMode.send ? '入库' : '确认调整'),
           textColor: Colors.white,
-          backgroundColor: Theme.of(context).primaryColor,
+          backgroundColor: Color(0xFF253334),
           onPressed: () {
-            if (_putInSuccess) {
-              _startScan(context);
+            if (_scanState is SubmitSuccessState) {
+              _startScan();
             } else {
-              _putInStorage();
+              if (widget.mode == SendMode.send) {
+                _putInStorage();
+              } else {
+                _adjustOrder();
+              }
             }
-          }),
+          })
     ];
-    return SizedBox(height: 50, child: ExpandedButtonsBar(info));
+    return SizedBox(
+      height: 60.0,
+      child: ExpandedButtonsBar(info),
+    );
   }
 
   void _putInStorage() async {
-    if (_selectedStation?.id == null) {
-      Fluttertoast.showToast(
-          msg: '未选择驿站或者驿站ID无效',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.CENTER,
-          fontSize: 16.0);
+    final id = _selectedStation?.id;
+    if (id == null) {
+      showToast('未选择驿站或者驿站ID无效');
       return;
     }
     try {
-      // await BlocProvider.of<EnvironmentBloc>(context)
-      //     .putIn(_code, _selectedStation.id);
-      // Fluttertoast.showToast(
-      //     msg: '入库成功',
-      //     toastLength: Toast.LENGTH_SHORT,
-      //     gravity: ToastGravity.CENTER,
-      //     fontSize: 16.0);
-      // setState(() {
-      //   _putInSuccess = true;
-      // });
+      final http = GetIt.instance.get<ServiceCenter>().httpService;
+      await http.get<Map<String, dynamic>>(
+          '/roshine/parcelorden/replaceWarehousing',
+          queryParameters: {'serialNumber': _order.code, 'postStationId': id});
+      showToast('入库成功');
+      setState(() {
+        _scanState = SubmitSuccessState();
+      });
     } catch (e) {
       final msg = ErrorEnvelope(e).toString();
-      if (msg.contains('已取消') && msg.contains('100')) {
-        return;
-      }
-      _alertError(context, msg);
+      showErrorDialog(context, msg);
     }
   }
 
-  /// 确定
-  void _alertError(BuildContext context, String message,
-      {Function() onConfirm}) {
-    var dialog = CupertinoAlertDialog(
-      content: Text(
-        message,
-        style: TextStyle(fontSize: 20),
-      ),
-      actions: <Widget>[
-        CupertinoButton(
-          child: Text('知道了'),
-          onPressed: () {
-            if (onConfirm != null) {
-              onConfirm();
-            } else {
-              Navigator.pop(context);
-            }
-          },
-        ),
-      ],
-    );
-    showDialog<dynamic>(context: context, builder: (_) => dialog);
+  void _adjustOrder() async {
+    final id = _selectedStation?.id;
+    if (id == null) {
+      showToast('未选择驿站或者驿站ID无效');
+      return;
+    }
+    if (id == _order.defaultPostStationId) {
+      showToast('驿站未更改');
+      return;
+    }
+    try {
+      final http = GetIt.instance.get<ServiceCenter>().httpService;
+      await http.get<Map<String, dynamic>>(
+          '/roshine/parcelorden/updateOrderPostOut',
+          queryParameters: {'orderIds': _order.code, ' stationId': id});
+      showToast('更改成功');
+      setState(() {
+        _scanState = SubmitSuccessState();
+      });
+    } catch (e) {
+      final msg = ErrorEnvelope(e).toString();
+      showErrorDialog(context, msg);
+    }
   }
 }

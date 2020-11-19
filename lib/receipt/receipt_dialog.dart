@@ -4,7 +4,6 @@ import 'package:environment/service_center.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
 import 'package:scanner/receipt/receipt_info.dart';
 import 'package:scanner/widgets/alert.dart';
@@ -18,7 +17,8 @@ Future<bool> showReceiptDialog(BuildContext context) {
   return showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => ReceiptDialog());
+      builder: (context) => WillPopScope(
+          onWillPop: () => Future.value(false), child: ReceiptDialog()));
 }
 
 class ReceiptDialog extends StatefulWidget {

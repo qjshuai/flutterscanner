@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
-import 'package:scanner/adjust/adjust_page.dart';
 import 'package:scanner/delivery/delivery_list_page.dart';
 import 'package:scanner/home/site.dart';
 import 'package:scanner/receipt/receipt_dialog.dart';
@@ -131,12 +130,14 @@ class _HomePageState extends State<HomePage> {
                       Expanded(
                           child: _buildToolItem(
                               context, '派送', 'assets/images/green_2.png',
-                              onPressed: () => showSendDialog(context))),
+                              onPressed: () =>
+                                  showSendDialog(context, SendMode.send))),
                       SizedBox(width: 18),
                       Expanded(
                           child: _buildToolItem(
                               context, '信息调整', 'assets/images/green_1.png',
-                              onPressed: () => showAdjustDialog(context))),
+                              onPressed: () =>
+                                  showSendDialog(context, SendMode.adjust))),
                     ],
                   ),
                 ),
