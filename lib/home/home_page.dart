@@ -5,11 +5,10 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:scanner/adjust/adjust_page.dart';
+import 'package:scanner/delivery/delivery_list_page.dart';
 import 'package:scanner/home/site.dart';
 import 'package:scanner/receipt/receipt_dialog.dart';
 import 'package:scanner/send/send_dialog.dart';
-import 'package:scanner/station_list_page.dart';
-import 'package:scanner/receipt/receipt_info.dart';
 import 'package:environment/error_wrapper.dart';
 
 class HomePage extends StatefulWidget {
@@ -27,7 +26,8 @@ class _HomePageState extends State<HomePage> {
 
   Future<Map<String, dynamic>> _fetchSiteList() async {
     final http = GetIt.instance.get<ServiceCenter>().httpService;
-    final response = await http.get('/roshine/poststation/queryStationPage', queryParameters: {'pageNum': _page, 'pageSize': 50});
+    final response = await http.get('/roshine/poststation/queryStationPage',
+        queryParameters: {'pageNum': _page, 'pageSize': 50});
     final sites = ((response.data['data']) as List<dynamic>)
         .map((e) => Site.fromJson(e))
         .toList();
@@ -197,7 +197,7 @@ class _HomePageState extends State<HomePage> {
     return SmartRefresher(
         enablePullDown: true,
         enablePullUp: true,
-        // header: WaterDropHeader(),
+        header: ClassicHeader(),
         footer: ClassicFooter(),
         controller: _refreshController,
         onRefresh: _onRefresh,
@@ -216,9 +216,7 @@ class _HomePageState extends State<HomePage> {
                   }
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                        builder: (context) {
-                          return DeliveryListPage(_sites[index]);
-                        },
+                        builder: (context) => DeliveryListPage(_sites[index]),
                         settings: RouteSettings(arguments: 1)),
                   );
                 },

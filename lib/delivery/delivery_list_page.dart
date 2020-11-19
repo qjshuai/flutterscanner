@@ -1,15 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:environment/request_state.dart';
 import 'package:environment/service_center.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
-import 'package:scanner/custom_color.dart';
+import 'package:scanner/utils/custom_color.dart';
 import 'package:scanner/home/site.dart';
-
 import 'delivery.dart';
-import 'error_envelope.dart';
+import '../utils/error_envelope.dart';
 
 class DeliveryListPage extends StatefulWidget {
   final Site site;
@@ -21,39 +19,12 @@ class DeliveryListPage extends StatefulWidget {
 }
 
 class _DeliveryListPageState extends State<DeliveryListPage> {
-  // RequestState _requestState;
-  /// 驿站列表内容
-  // Widget _buildContent(BuildContext context) {
-  //   if (_requestState is RequestStateRequesting) {
-  //     return Center(child: CircularProgressIndicator());
-  //   } else if (_requestState is RequestStateFailure) {
-  //     return Center(
-  //         child: SizedBox(
-  //           child: SizedBox(
-  //             width: 120,
-  //             height: 50,
-  //             child: FlatButton(
-  //               child: Text(
-  //                 '重试',
-  //                 style: Theme.of(context).primaryTextTheme.subtitle1,
-  //               ),
-  //               onPressed: () => _fetchSiteList(),
-  //             ),
-  //           ),
-  //         ));
-  //   } else {
-  //     return _buildStationList(context);
-  //   }
-  // }
-
   RefreshController _refreshController =
       RefreshController(initialRefresh: true);
   List<Delivery> _deliveries = [];
 
   int _page = 1;
   int _total = 0;
-
-  int get _limit => 20;
 
   Future<Map<String, dynamic>> _fetchSiteList() async {
     final http = GetIt.instance.get<ServiceCenter>().httpService;
@@ -152,7 +123,7 @@ class _DeliveryListPageState extends State<DeliveryListPage> {
     return SmartRefresher(
         enablePullDown: true,
         enablePullUp: true,
-        // header: WaterDropHeader(),
+        header: ClassicHeader(),
         footer: ClassicFooter(),
         controller: _refreshController,
         onRefresh: _onRefresh,
@@ -229,13 +200,6 @@ class _DeliveryListPageState extends State<DeliveryListPage> {
                               Spacer(),
                             ],
                           ),
-                          // Text(
-                          //   '驿站驿站驿站',
-                          //   style: Theme.of(context)
-                          //       .textTheme
-                          //       .subtitle1
-                          //       .copyWith(color: Color(0xFF263336)),
-                          // ),
                         ],
                       ),
                     ),

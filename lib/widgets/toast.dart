@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 Future<bool> showToast(String msg, {ToastGravity gravity = ToastGravity.CENTER}) async {
+  Fluttertoast.cancel();
   return Fluttertoast.showToast(
       msg: msg ?? '错误',
       toastLength: Toast.LENGTH_SHORT,

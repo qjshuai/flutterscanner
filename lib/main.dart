@@ -16,9 +16,9 @@ import 'package:get_it/get_it.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
-import 'bloc_observer.dart';
-import 'custom_color.dart';
-import 'error_envelope.dart';
+import 'utils/bloc_observer.dart';
+import 'utils/custom_color.dart';
+import 'utils/error_envelope.dart';
 import 'home/home_page.dart';
 
 Future<List<BlocProvider>> setup() async {

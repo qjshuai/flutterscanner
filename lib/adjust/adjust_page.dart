@@ -4,7 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:scanner/receipt/receipt_info.dart';
-import '../buttons_bar.dart';
+import '../widgets/buttons_bar.dart';
 
 /// 收件
 Future<bool> showAdjustDialog(BuildContext context) {

@@ -30,7 +30,6 @@ void showAlertDialog(
   showDialog(context: context, builder: (_) => dialog);
 }
 
-
 void showErrorDialog(BuildContext context, String message,
     {Function() onConfirm}) {
   var dialog = CupertinoAlertDialog(

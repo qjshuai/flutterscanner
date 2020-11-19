@@ -6,11 +6,11 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:scanner/send/storage_order.dart';
-import '../buttons_bar.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../error_envelope.dart';
+import 'package:scanner/utils/scan_state.dart';
+import '../widgets/buttons_bar.dart';
+import '../utils/error_envelope.dart';
 
-// 入库
+// 发件入库
 Future<bool> showSendDialog(BuildContext context) {
   return showDialog<bool>(
       context: context,
@@ -18,15 +18,14 @@ Future<bool> showSendDialog(BuildContext context) {
       builder: (context) => SendDialog());
 }
 
-
 class SendDialog extends StatefulWidget {
-
   @override
   _SendDialogState createState() => _SendDialogState();
 }
 
 class _SendDialogState extends State<SendDialog> {
-  static const _nativeChannel = const MethodChannel('com.js.scanner');
+
+  ScanState _scanState = ScanningState();
 
   StorageOrder _order;
   StorageStation _selectedStation;
@@ -38,6 +37,14 @@ class _SendDialogState extends State<SendDialog> {
   bool _putInSuccess = false;
   bool _onRequesting = false;
   bool _bootstrap = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    //自动开启扫码
+    _startScan();
+  }
 
   /// 点击扫码
   void _startScan(BuildContext context) async {
