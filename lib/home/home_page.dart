@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:quiver/strings.dart';
 import 'package:scanner/delivery/delivery_list_page.dart';
 import 'package:scanner/home/site.dart';
+import 'package:scanner/input_order.dart';
 import 'package:scanner/receipt/receipt_dialog.dart';
 import 'package:scanner/send/send_dialog.dart';
 import 'package:environment/error_wrapper.dart';
@@ -111,9 +113,29 @@ class _HomePageState extends State<HomePage> {
                 SizedBox(
                   height: 30.0,
                 ),
-                Text(
-                  '工具列表',
-                  style: Theme.of(context).primaryTextTheme.headline4,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '工具列表',
+                      style: Theme.of(context).primaryTextTheme.headline4,
+                    ),
+                    CupertinoButton(child: Row(
+                      children: [
+                        Icon(Icons.edit_sharp, color: Colors.white, size: 15.0),
+                        SizedBox(width: 5),
+                        Text(
+                          '手动录入',
+                          style: TextStyle(color: Colors.white, fontSize: 13.0, fontWeight: FontWeight.w500),
+                        ),
+                      ],
+                    ), onPressed: () async {
+                      final code = await showInputOrderDialog(context);
+                      if (isNotEmpty(code)) {
+
+                      }
+                    }),
+                  ],
                 ),
                 SizedBox(
                   height: 20.0,

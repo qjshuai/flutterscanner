@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 
 void showAlertDialog(
     BuildContext context, String msg, {Function onRetry}) {
+  print('msgmsgmsgmsg$onRetry');
   var dialog = CupertinoAlertDialog(
     content: Text(
-      msg,
+      msg ?? '错误',
       style: TextStyle(fontSize: 20),
     ),
     actions: <Widget>[
@@ -34,7 +35,7 @@ void showErrorDialog(BuildContext context, String message,
     {Function() onConfirm}) {
   var dialog = CupertinoAlertDialog(
     content: Text(
-      message,
+      message ?? '错误',
       style: TextStyle(fontSize: 20),
     ),
     actions: <Widget>[

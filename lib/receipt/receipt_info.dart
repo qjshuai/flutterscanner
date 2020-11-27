@@ -37,7 +37,7 @@ class ReceiptOrder {
       return "无";
     }
     return details
-        .map((e) => '${e.category ?? ''} ${e.title}元洁衣区 ${e.amount}件')
+        .map((e) => '${e.category ?? ''}${e.title ?? ''}元洁衣区 ${e.amount}件')
         .join("、");
   }
 

@@ -226,7 +226,7 @@ class _SendDialogState extends State<SendDialog> {
 
   String get orderTitle {
     return (_order?.orderDetails ?? [])
-        .map((e) => '${e.category}${e.title}${e.amount}元洁衣区 件')
+        .map((e) => '${e.category ?? ''}${e.title ?? ''}元洁衣区 ${e.amount}件')
         .join('、');
   }
 

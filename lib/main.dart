@@ -14,15 +14,18 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'utils/bloc_observer.dart';
 import 'utils/custom_color.dart';
 import 'utils/error_envelope.dart';
 import 'home/home_page.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<List<BlocProvider>> setup() async {
   try {
+    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     final preference = await SharedPreferences.getInstance();
     final preferenceBox = SharedPreferencesWrapper(preference);
 
@@ -135,6 +138,22 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Scanner',
+      localizationsDelegates: [
+        // this line is important
+        RefreshLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        const FallbackCupertinoLocalisationsDelegate(),
+      ],
+      supportedLocales: [
+        // const Locale('en'),
+        const Locale('zh'),
+      ],
+      localeResolutionCallback:
+          (Locale locale, Iterable<Locale> supportedLocales) {
+        //print("change language");
+        return locale;
+      },
       theme: ThemeData(
         platform: TargetPlatform.iOS,
         primaryColor: CustomColor.primaryColor,
@@ -165,4 +184,19 @@ class _MyAppState extends State<MyApp> {
       home: HomePage(),
     );
   }
+}
+
+class FallbackCupertinoLocalisationsDelegate
+    extends LocalizationsDelegate<CupertinoLocalizations> {
+  const FallbackCupertinoLocalisationsDelegate();
+
+  @override
+  bool isSupported(Locale locale) => true;
+
+  @override
+  Future<CupertinoLocalizations> load(Locale locale) =>
+      DefaultCupertinoLocalizations.load(locale);
+
+  @override
+  bool shouldReload(FallbackCupertinoLocalisationsDelegate old) => false;
 }

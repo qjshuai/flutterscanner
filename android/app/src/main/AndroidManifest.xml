@@ -14,8 +14,8 @@
 
     <application
         android:name="io.flutter.app.FlutterApplication"
-        android:icon="@mipmap/ic_launcher"
-        android:label="扫码">
+        android:icon="@mipmap/launcher_icon"
+        android:label="路尚洁衣">
         <activity
             android:name=".ScannerActivity"
             android:screenOrientation="portrait"
