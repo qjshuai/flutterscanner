@@ -7,7 +7,8 @@ import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:quiver/strings.dart';
 import 'package:scanner/delivery/delivery_list_page.dart';
 import 'package:scanner/home/site.dart';
-import 'package:scanner/input_order.dart';
+import 'package:scanner/input/input_adjust.dart';
+import 'package:scanner/input/input_order.dart';
 import 'package:scanner/receipt/receipt_dialog.dart';
 import 'package:scanner/send/send_dialog.dart';
 import 'package:environment/error_wrapper.dart';
@@ -129,12 +130,7 @@ class _HomePageState extends State<HomePage> {
                           style: TextStyle(color: Colors.white, fontSize: 13.0, fontWeight: FontWeight.w500),
                         ),
                       ],
-                    ), onPressed: () async {
-                      final code = await showInputOrderDialog(context);
-                      if (isNotEmpty(code)) {
-
-                      }
-                    }),
+                    ), onPressed: () => _startInput(context)),
                   ],
                 ),
                 SizedBox(
@@ -180,6 +176,16 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  void _startInput(BuildContext context) async {
+    final code = await showInputOrderDialog(context);
+    if (isNotEmpty(code)) {
+      final result = await showInputAdjustDialog(context, code);
+      if (result) {
+        _startInput(context);
+      }
+    }
   }
 
   /// 上方工具栏

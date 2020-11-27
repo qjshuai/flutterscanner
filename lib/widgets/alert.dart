@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 
 void showAlertDialog(
     BuildContext context, String msg, {Function onRetry}) {
-  print('msgmsgmsgmsg$onRetry');
   var dialog = CupertinoAlertDialog(
     content: Text(
       msg ?? '错误',
@@ -20,7 +19,7 @@ void showAlertDialog(
         }),
       ),
       CupertinoButton(
-        child: Text('重新扫码'),
+        child: Text('重试'),
         onPressed: () {
           Navigator.pop(context);
           onRetry();
