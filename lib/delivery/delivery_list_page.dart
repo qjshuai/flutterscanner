@@ -140,7 +140,7 @@ class _DeliveryListPageState extends State<DeliveryListPage> {
                     borderRadius: BorderRadius.circular(10.0),
                     child: Container(
                       color: Colors.white,
-                      padding: EdgeInsets.all(15.0),
+                      padding: EdgeInsets.symmetric(horizontal: 15.0),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -154,30 +154,33 @@ class _DeliveryListPageState extends State<DeliveryListPage> {
                             ),
                           ),
                           SizedBox(width: 10.0),
-                          Column(
+                          Expanded(child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            // mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(delivery.nickname,
                                   style: Theme.of(context)
                                       .primaryTextTheme
                                       .bodyText1
                                       .copyWith(
-                                          color: CustomColor.darkTextColor,
-                                          fontWeight: FontWeight.w500)),
+                                      color: CustomColor.darkTextColor,
+                                      fontWeight: FontWeight.w500)),
                               Text(
-                                delivery.subTitle,
-                                style: TextStyle(
-                                    color: Color(0xFF8C9C9D), fontSize: 11),
-                              ),
+                                  delivery.subTitle,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                      color: Color(0xFF8C9C9D), fontSize: 11),
+                                ),
                               Text(
                                 delivery.createtime,
                                 style: TextStyle(
                                     color: Color(0xFFB8C8C5), fontSize: 10),
                               ),
                             ],
-                          ),
-                          Spacer(),
+                          )),
+                          // Spacer(),
                           Column(
                             children: [
                               Container(
@@ -189,6 +192,7 @@ class _DeliveryListPageState extends State<DeliveryListPage> {
                                     )),
                                 width: 50,
                                 height: 20,
+                                margin: EdgeInsets.only(top: 15.0),
                                 child: Center(
                                   child: Text(
                                     delivery.statusName,
