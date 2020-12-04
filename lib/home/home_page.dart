@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
+import 'package:intl/intl.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:quiver/strings.dart';
 import 'package:scanner/delivery/delivery_list_page.dart';
@@ -12,6 +13,11 @@ import 'package:scanner/input/input_order.dart';
 import 'package:scanner/receipt/receipt_dialog.dart';
 import 'package:scanner/send/send_dialog.dart';
 import 'package:environment/error_wrapper.dart';
+import 'package:package_info/package_info.dart';
+import 'dart:io';
+import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -25,6 +31,83 @@ class _HomePageState extends State<HomePage> {
 
   int _page = 1;
   int _total = 0;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _checkForUpdate();
+  }
+
+  void _checkForUpdate() async {
+    final package = await PackageInfo.fromPlatform();
+    final http = GetIt.instance.get<ServiceCenter>().httpService;
+    String appKey;
+    if (Platform.isIOS) {
+      appKey = 'f3c723341409b2cf6eff516670fd8a18';
+    } else {
+      appKey = '7679feb3f8e224230741ffd89a221d12';
+    }
+    final buildNumber = package.buildNumber;
+    final response = await http.post('https://www.pgyer.com/apiv2/app/view', data: {
+      '_api_key': '13c2602c5d29dd38b4502e9a47a24dcc',
+      'appKey': appKey,
+      'buildVersion': buildNumber
+    },
+      options: Options(contentType: 'application/x-www-form-urlencoded'),
+    );
+    final data = response.data['data'];
+    final build = int.tryParse(buildNumber);
+    final serverBuild = int.tryParse((data['buildVersionNo'] as String));
+    final url = data['buildShortcutUrl'] as String;
+    final hasNew = serverBuild != null && serverBuild > build;
+    if (hasNew) {
+      final preference = await SharedPreferences.getInstance();
+      final lastReject = preference.getString('lastReject');
+      if (lastReject != null) {
+        final date = DateTime.tryParse(lastReject);
+        if (date.month == DateTime.now().month && date.day == DateTime.now().day) {
+          return;
+        }
+      }
+      _alertUpdate(url);
+    }
+  }
+
+  final _format = DateFormat('yyyy-MM-dd');
+
+  void _alertUpdate(String url) {
+    final dialog = CupertinoAlertDialog(
+      title: Text(
+        '检测到新版本, 是否下载新版本?',
+        style: TextStyle(fontSize: 20),
+      ),
+      actions: <Widget>[
+        CupertinoDialogAction(
+          child: Text('取消'),
+          onPressed: () {
+            Navigator.pop(context);
+            //记录拒绝时间
+            SharedPreferences.getInstance().then((value) {
+              value.setString('lastReject', _format.format(DateTime.now()));
+            });
+          },
+        ),
+        CupertinoDialogAction(
+          child: Text('确定'),
+          onPressed: () {
+            if (Platform.isIOS) {
+              launch('https://www.pgyer.com/rnNY', forceSafariVC: true);
+            } else {
+              launch('https://www.pgyer.com/4PvO');
+            }
+            Navigator.pop(context);
+          },
+        ),
+      ],
+    );
+    showCupertinoDialog(context: context, builder: (_) => dialog);
+  }
 
   Future<Map<String, dynamic>> _fetchSiteList() async {
     final http = GetIt.instance.get<ServiceCenter>().httpService;

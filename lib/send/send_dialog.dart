@@ -148,67 +148,73 @@ class _SendDialogState extends State<SendDialog> {
                   height: 60,
                   child: _buildSelectedStation(),
                 ),
-                SizedBox(height: 30),
-                Text(
-                  orderTitle,
-                  style: TextStyle(
-                      color: Theme.of(context).primaryColor,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500),
-                ),
-                Text(
-                  '洁品信息',
-                  style: TextStyle(
-                    color: Color(0xFF8C9C9D),
-                    fontSize: 13,
-                  ),
-                ),
-                SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                        child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                Expanded(child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                    SizedBox(height: 30),
+                    Text(
+                      orderTitle ?? '',
+                      style: TextStyle(
+                          color: Theme.of(context).primaryColor,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500),
+                    ),
+                    Text(
+                      '洁品信息',
+                      textAlign: TextAlign.start,
+                      style: TextStyle(
+                        color: Color(0xFF8C9C9D),
+                        fontSize: 13,
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    Row(
                       children: [
-                        Text(
-                          '${_order?.actuallyPrice ?? 0}',
-                          style: TextStyle(
-                              color: Theme.of(context).primaryColor,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w500),
-                        ),
-                        Text(
-                          '价格',
-                          style: TextStyle(
-                            color: Color(0xFF8C9C9D),
-                            fontSize: 13,
-                          ),
-                        ),
+                        Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${_order?.actuallyPrice ?? 0}',
+                                  style: TextStyle(
+                                      color: Theme.of(context).primaryColor,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                                Text(
+                                  '价格',
+                                  style: TextStyle(
+                                    color: Color(0xFF8C9C9D),
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            )),
+                        Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${_order?.orderDetails?.length ?? 0}',
+                                  style: TextStyle(
+                                      color: Theme.of(context).primaryColor,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                                Text(
+                                  '数量',
+                                  style: TextStyle(
+                                    color: Color(0xFF8C9C9D),
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            )),
                       ],
-                    )),
-                    Expanded(
-                        child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${_order?.orderDetails?.length ?? 0}',
-                          style: TextStyle(
-                              color: Theme.of(context).primaryColor,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w500),
-                        ),
-                        Text(
-                          '数量',
-                          style: TextStyle(
-                            color: Color(0xFF8C9C9D),
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    )),
-                  ],
-                ),
-                Spacer(),
+                    )
+                  ],),
+                )),
                 _buildBottomBar(context),
               ],
             ),
