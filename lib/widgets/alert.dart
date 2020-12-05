@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-void showAlertDialog(
-    BuildContext context, String msg, {Function onRetry}) {
+void showAlertDialog(BuildContext context, String msg,
+    {Function onCancel, Function onRetry}) {
   var dialog = CupertinoAlertDialog(
     content: Text(
       msg ?? '错误',
@@ -10,14 +10,19 @@ void showAlertDialog(
     ),
     actions: <Widget>[
       CupertinoButton(
-        child: Text('取消'),
-        onPressed: () => Navigator.popUntil(context, (route) {
-          if (route is MaterialPageRoute) {
-            return route.isFirst;
-          }
-          return false;
-        }),
-      ),
+          child: Text('取消'),
+          onPressed: () {
+            if (onCancel != null) {
+              onCancel();
+            } else {
+              Navigator.popUntil(context, (route) {
+                if (route is MaterialPageRoute) {
+                  return route.isFirst;
+                }
+                return false;
+              });
+            }
+          }),
       CupertinoButton(
         child: Text('重试'),
         onPressed: () {
@@ -27,7 +32,10 @@ void showAlertDialog(
       ),
     ],
   );
-  showDialog(context: context, builder: (_) => WillPopScope(child: dialog, onWillPop: () async => false));
+  showDialog(
+      context: context,
+      builder: (_) =>
+          WillPopScope(child: dialog, onWillPop: () async => false));
 }
 
 void showErrorDialog(BuildContext context, String message,
@@ -50,5 +58,8 @@ void showErrorDialog(BuildContext context, String message,
       ),
     ],
   );
-  showDialog<dynamic>(context: context, builder: (_) => WillPopScope(child: dialog, onWillPop: () async => false));
+  showDialog<dynamic>(
+      context: context,
+      builder: (_) =>
+          WillPopScope(child: dialog, onWillPop: () async => false));
 }

@@ -67,7 +67,10 @@ class _InputAdjustDialogState extends State<InputAdjustDialog> {
       setState(() {
         _scanState = FetchingErrorState(msg);
       });
-      showAlertDialog(context, msg, onRetry: (){
+      showAlertDialog(context, msg, onCancel: () {
+        Navigator.of(context).pop(false);
+        Navigator.of(context).pop(false);
+      }, onRetry: (){
         Navigator.of(context).pop(true);
       });
     }
@@ -109,7 +112,7 @@ class _InputAdjustDialogState extends State<InputAdjustDialog> {
       setState(() {
         _scanState = FetchingErrorState(msg);
       });
-      showAlertDialog(context, msg, onRetry: _startScan);
+      showAlertDialog(context, msg, onCancel: () => Navigator.of(context).pop(false), onRetry: _startScan);
     }
   }
 

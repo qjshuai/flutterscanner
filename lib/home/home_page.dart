@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:quiver/strings.dart';
 import 'package:scanner/delivery/delivery_list_page.dart';
+import 'package:scanner/home/print_dialog.dart';
 import 'package:scanner/home/site.dart';
 import 'package:scanner/input/input_adjust.dart';
 import 'package:scanner/input/input_order.dart';
@@ -16,6 +17,7 @@ import 'package:environment/error_wrapper.dart';
 import 'package:package_info/package_info.dart';
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:scanner/widgets/toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -34,7 +36,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _checkForUpdate();
   }
@@ -49,11 +50,13 @@ class _HomePageState extends State<HomePage> {
       appKey = '7679feb3f8e224230741ffd89a221d12';
     }
     final buildNumber = package.buildNumber;
-    final response = await http.post('https://www.pgyer.com/apiv2/app/view', data: {
-      '_api_key': '13c2602c5d29dd38b4502e9a47a24dcc',
-      'appKey': appKey,
-      'buildVersion': buildNumber
-    },
+    final response = await http.post(
+      'https://www.pgyer.com/apiv2/app/view',
+      data: {
+        '_api_key': '13c2602c5d29dd38b4502e9a47a24dcc',
+        'appKey': appKey,
+        'buildVersion': buildNumber
+      },
       options: Options(contentType: 'application/x-www-form-urlencoded'),
     );
     final data = response.data['data'];
@@ -66,7 +69,8 @@ class _HomePageState extends State<HomePage> {
       final lastReject = preference.getString('lastReject');
       if (lastReject != null) {
         final date = DateTime.tryParse(lastReject);
-        if (date.month == DateTime.now().month && date.day == DateTime.now().day) {
+        if (date.month == DateTime.now().month &&
+            date.day == DateTime.now().day) {
           return;
         }
       }
@@ -195,7 +199,7 @@ class _HomePageState extends State<HomePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(
-                  height: 30.0,
+                  height: 10.0,
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -204,43 +208,69 @@ class _HomePageState extends State<HomePage> {
                       '工具列表',
                       style: Theme.of(context).primaryTextTheme.headline4,
                     ),
-                    CupertinoButton(child: Row(
-                      children: [
-                        Icon(Icons.edit_sharp, color: Colors.white, size: 15.0),
-                        SizedBox(width: 5),
-                        Text(
-                          '手动录入',
-                          style: TextStyle(color: Colors.white, fontSize: 13.0, fontWeight: FontWeight.w500),
-                        ),
-                      ],
-                    ), onPressed: () => _startInput(context)),
+                    // CupertinoButton(
+                    //     child: Row(
+                    //       children: [
+                    //         Image.asset('assets/images/print.png',
+                    //             color: Colors.white, width: 15.0, height: 15.0),
+                    //         SizedBox(width: 5),
+                    //         Text(
+                    //           '打印',
+                    //           style: TextStyle(
+                    //               color: Colors.white,
+                    //               fontSize: 13.0,
+                    //               fontWeight: FontWeight.w500),
+                    //         ),
+                    //       ],
+                    //     ),
+                    //     onPressed: () => _startPrint(context)),
                   ],
                 ),
+                SizedBox(height: 20.0),
                 SizedBox(
-                  height: 20.0,
-                ),
-                SizedBox(
-                  height: 120.0,
-                  child: Row(
-                    children: [
-                      Expanded(
-                          child: _buildToolItem(
-                              context, '洁衣', 'assets/images/green_3.png',
-                              onPressed: () => showReceiptDialog(context))),
-                      SizedBox(width: 18),
-                      Expanded(
-                          child: _buildToolItem(
-                              context, '派送', 'assets/images/green_2.png',
-                              onPressed: () =>
-                                  showSendDialog(context, SendMode.send))),
-                      SizedBox(width: 18),
-                      Expanded(
-                          child: _buildToolItem(
-                              context, '信息调整', 'assets/images/green_1.png',
-                              onPressed: () =>
-                                  showSendDialog(context, SendMode.adjust))),
-                    ],
-                  ),
+                  child: Column(
+                      // mainAxisSize: MainAxisSize.max,
+                      // crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                                child: _buildToolItem(
+                                    context, '洁衣', 1, 'assets/images/scan.png',
+                                    onPressed: () =>
+                                        showReceiptDialog(context))),
+                            SizedBox(
+                              width: 15.0,
+                            ),
+                            Expanded(
+                                child: _buildToolItem(
+                                    context, '派送', 2, 'assets/images/scan.png',
+                                    onPressed: () => showSendDialog(
+                                        context, SendMode.send))),
+                          ],
+                          mainAxisSize: MainAxisSize.max,
+                          // crossAxisAlignment: CrossAxisAlignment.stretch,
+                        ),
+                        SizedBox(
+                          height: 15.0,
+                        ),
+                        Row(
+                          children: [
+                            Expanded(
+                                child: _buildToolItem(context, '信息调整', 3,
+                                    'assets/images/scan.png',
+                                    onPressed: () => showSendDialog(
+                                        context, SendMode.adjust))),
+                            SizedBox(
+                              width: 15.0,
+                            ),
+                            Expanded(
+                                child: _buildToolItem(
+                                    context, '待收件', 4, 'assets/images/box.png',
+                                    onPressed: () => showToast('尚不支持该功能'))),
+                          ],
+                        )
+                      ]),
                 ),
                 SizedBox(
                   height: 30.0,
@@ -261,46 +291,45 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _startInput(BuildContext context) async {
-    final code = await showInputOrderDialog(context);
-    if (isNotEmpty(code)) {
-      final result = await showInputAdjustDialog(context, code);
-      if (result) {
-        _startInput(context);
-      }
-    }
+  void _startPrint(BuildContext context) {
+    showPrintDialog(context);
   }
 
   /// 上方工具栏
-  Widget _buildToolItem(BuildContext context, String title, String icon,
+  Widget _buildToolItem(
+      BuildContext context, String title, int index, String icon,
       {Function() onPressed}) {
     return CupertinoButton(
       padding: EdgeInsets.zero,
       onPressed: onPressed,
-      child: Container(
-          decoration: BoxDecoration(
-              image: DecorationImage(
-            scale: 2.0,
-            image: AssetImage(icon),
-          )),
-          child: Center(
-              child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(height: 13.0),
-              Image.asset(
-                'assets/images/scan.png',
-                scale: 2.0,
-                width: 45.0,
-                height: 45.0,
-              ),
-              SizedBox(height: 13.0),
-              Text(
-                title,
-                style: Theme.of(context).primaryTextTheme.subtitle1,
-              )
-            ],
-          ))),
+      child: AspectRatio(
+        aspectRatio: 1.25,
+        child: Container(
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10.0),
+                image: DecorationImage(
+                    scale: 2.0,
+                    image: AssetImage('assets/images/bg_$index.png'),
+                    fit: BoxFit.cover)),
+            child: Center(
+                child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(height: 13.0),
+                Image.asset(
+                  icon,
+                  scale: 2.0,
+                  width: 45.0,
+                  height: 45.0,
+                ),
+                SizedBox(height: 13.0),
+                Text(
+                  title,
+                  style: Theme.of(context).primaryTextTheme.subtitle1,
+                )
+              ],
+            ))),
+      ),
     );
   }
 
@@ -319,18 +348,19 @@ class _HomePageState extends State<HomePage> {
             itemCount: _sites.length,
             itemBuilder: (context, index) {
               return InkWell(
-                onTap: () {
+                onTap: () async {
                   if ((_sites[index].readyReceive ?? 0) < 1) {
                     Fluttertoast.cancel();
                     Fluttertoast.showToast(
                         msg: '无待取件', gravity: ToastGravity.CENTER);
                     return;
                   }
-                  Navigator.of(context).push(
+                  await Navigator.of(context).push(
                     MaterialPageRoute(
                         builder: (context) => DeliveryListPage(_sites[index]),
                         settings: RouteSettings(arguments: 1)),
                   );
+                  _onRefresh();
                 },
                 child: Column(
                   children: [

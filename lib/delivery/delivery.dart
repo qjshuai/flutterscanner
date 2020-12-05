@@ -4,10 +4,19 @@ class Delivery {
   final String createtime;
   final String statusName;
   final String headImgUrl;
+  // 1 already  2 ready
+  final int type;
+  final String orderCode;
+  final String tel;
   final List<DeliveryDetail> detailList;
+
+  bool isSelected = false;
 
   Delivery(
       {this.id,
+      this.type,
+      this.orderCode,
+      this.tel,
       this.nickname,
       this.createtime,
       this.statusName,
@@ -25,6 +34,9 @@ class Delivery {
       id: json['id'],
       nickname: json['nickname'],
       createtime: json['createtime'],
+      type: json['type'],
+      orderCode: json['orderCode'],
+      tel: json['tel'],
       statusName: json['statusName'],
       headImgUrl: json['headImgUrl'],
       detailList: (json['detailList'] as List<dynamic>)
