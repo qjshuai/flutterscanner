@@ -42,7 +42,7 @@ Future<List<BlocProvider>> setup() async {
     } else {
       final env = Environment(
           name: 'development',
-          baseUrl: 'http://172.16.178.16:8082',
+          baseUrl: 'https://wechat.roshinediy.com',
           isDebug: true,
           logMode: LogMode.verbose);
       defaultState = AppState(settings: settings, environment: env);

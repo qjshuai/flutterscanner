@@ -9,26 +9,32 @@ class ExpandedButtonsBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final buttons = buttonInfo
         .map((e) => Expanded(
-      flex: 1,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(10.0),
-        child: FlatButton(
-          // materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          color: e.backgroundColor,
-          child: Text(e.text,
-              style: TextStyle(color: e.textColor, fontSize: 15, fontWeight: FontWeight.w500)),
-          onPressed: e.onPressed,
-        ),
-      ),
-    ))
+              flex: 1,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10.0),
+                child: FlatButton(
+                  // materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  color: e.backgroundColor,
+                  child: Text(e.text,
+                      style: TextStyle(
+                          color: e.textColor,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500)),
+                  onPressed: e.onPressed,
+                ),
+              ),
+            ))
         .toList();
+    List<Widget> children = [];
+    buttons.asMap().entries.forEach((element) {
+      children.add(element.value);
+      if (buttons.length > 1 && element.key != buttons.length - 1) {
+        children.add(SizedBox(width: 20));
+      }
+    });
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        buttons[0],
-        SizedBox(width: 20),
-        buttons[1],
-      ],
+      children: children,
     );
   }
 }

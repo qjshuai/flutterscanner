@@ -190,27 +190,25 @@ class _DeliveryListPageState extends State<DeliveryListPage> {
       ),
       body: Stack(
         children: [
+          Container(
+              decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor,
+                  image: DecorationImage(
+                    image: AssetImage(
+                      'assets/images/logo.png',
+                    ),
+                    alignment: Alignment(0, -0.65),
+                    scale: 2.0,
+                  ))),
           AnimatedPositioned(
               duration: const Duration(milliseconds: 300),
               left: 0,
               right: 0,
               bottom: _isEditing ? bottom + 60 : 0,
               top: 0,
-              child: Container(
-                decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor,
-                    image: DecorationImage(
-                      image: AssetImage(
-                        'assets/images/logo.png',
-                      ),
-                      alignment: Alignment(0, -0.65),
-                      scale: 2.0,
-                    )),
-                child: Padding(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-                  child: _buildStationList(context),
-                ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                child: _buildStationList(context),
               )),
           AnimatedPositioned(
               duration: const Duration(milliseconds: 300),
@@ -226,77 +224,71 @@ class _DeliveryListPageState extends State<DeliveryListPage> {
 
   Widget _buildBottomBar(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20.0),
-      color: Colors.white,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CupertinoButton(
-                  padding: EdgeInsets.symmetric(horizontal: 0, vertical: 15),
-                  child: Row(
-                    children: [
-                      Icon(
-                        isSelectedAll
-                            ? Icons.check_box_outlined
-                            : Icons.check_box_outline_blank,
-                        color: Theme.of(context).primaryColor,
-                        size: 20,
-                      ),
-                      SizedBox(width: 15.0),
-                      Text(
-                        isSelectedAll ? '取消全选' : '全选',
-                        style: TextStyle(
-                            color: Theme.of(context).primaryColor,
-                            fontSize: 13.0,
-                            fontWeight: FontWeight.w500),
-                      )
-                    ],
-                  ),
-                  onPressed: () {
-                    final isSelectedAll = this.isSelectedAll;
-                    setState(() {
-                      _deliveries.forEach((element) {
-                        element.isSelected = !isSelectedAll;
-                      });
-                    });
-                  }),
-              Spacer(),
-              CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  onPressed: isSending
-                      ? null
-                      : () {
-                          setState(() {
-                            _submitOrders();
-                          });
-                        },
-                  child: Container(
-                    width: 110,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: isSending
-                          ? Color(0xFF295B55).withAlpha(150)
-                          : Color(0xFF295B55),
-                      borderRadius: BorderRadius.circular(4.0),
+        padding: EdgeInsets.symmetric(horizontal: 20.0),
+        color: Colors.white,
+        child: Row(
+          children: [
+            CupertinoButton(
+                padding: EdgeInsets.symmetric(horizontal: 0, vertical: 15),
+                child: Row(
+                  children: [
+                    Icon(
+                      isSelectedAll
+                          ? Icons.check_box_outlined
+                          : Icons.check_box_outline_blank,
+                      color: Theme.of(context).primaryColor,
+                      size: 20,
                     ),
-                    child: isSending
-                        ? CupertinoActivityIndicator()
-                        : Center(
-                            child: Text(
-                            '揽收',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 13.0,
-                                fontWeight: FontWeight.w500),
-                          )),
-                  ))
-            ],
-          )
-        ],
-      ),
-    );
+                    SizedBox(width: 15.0),
+                    Text(
+                      isSelectedAll ? '取消全选' : '全选',
+                      style: TextStyle(
+                          color: Theme.of(context).primaryColor,
+                          fontSize: 13.0,
+                          fontWeight: FontWeight.w500),
+                    )
+                  ],
+                ),
+                onPressed: () {
+                  final isSelectedAll = this.isSelectedAll;
+                  setState(() {
+                    _deliveries.forEach((element) {
+                      element.isSelected = !isSelectedAll;
+                    });
+                  });
+                }),
+            Spacer(),
+            CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: isSending
+                    ? null
+                    : () {
+                        setState(() {
+                          _submitOrders();
+                        });
+                      },
+                child: Container(
+                  width: 110,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: isSending
+                        ? Color(0xFF295B55).withAlpha(150)
+                        : Color(0xFF295B55),
+                    borderRadius: BorderRadius.circular(4.0),
+                  ),
+                  child: isSending
+                      ? CupertinoActivityIndicator()
+                      : Center(
+                          child: Text(
+                          '揽收',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w500),
+                        )),
+                ))
+          ],
+        ));
   }
 
   Widget _buildStationList(BuildContext context) {
@@ -357,7 +349,7 @@ class _DeliveryListPageState extends State<DeliveryListPage> {
               showToast("无客户号码");
               return;
             }
-            final scheme = 'tel:+${delivery.tel}';
+            final scheme = 'tel:${delivery.tel}';
             if (await canLaunch(scheme)) {
               await launch(scheme);
             } else {

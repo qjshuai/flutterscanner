@@ -70,7 +70,7 @@ class _InputAdjustDialogState extends State<InputAdjustDialog> {
       showAlertDialog(context, msg, onCancel: () {
         Navigator.of(context).pop(false);
         Navigator.of(context).pop(false);
-      }, onRetry: (){
+      }, onRetry: () {
         Navigator.of(context).pop(true);
       });
     }
@@ -112,7 +112,9 @@ class _InputAdjustDialogState extends State<InputAdjustDialog> {
       setState(() {
         _scanState = FetchingErrorState(msg);
       });
-      showAlertDialog(context, msg, onCancel: () => Navigator.of(context).pop(false), onRetry: _startScan);
+      showAlertDialog(context, msg,
+          onCancel: () => Navigator.of(context).pop(false),
+          onRetry: _startScan);
     }
   }
 
@@ -340,8 +342,10 @@ class _InputAdjustDialogState extends State<InputAdjustDialog> {
           onPressed: () {
             Navigator.of(context).pop(false);
           }),
-      ButtonInfo(
-          text: _scanState is SubmitSuccessState ? '继续录入' : '确认调整',
+    ];
+    if (!(_scanState is SubmitSuccessState)) {
+      info.add(ButtonInfo(
+          text: '确认调整',
           textColor: Colors.white,
           backgroundColor: Color(0xFF253334),
           onPressed: () {
@@ -351,8 +355,8 @@ class _InputAdjustDialogState extends State<InputAdjustDialog> {
             } else {
               _adjustOrder();
             }
-          })
-    ];
+          }));
+    }
     return SizedBox(
       height: 60.0,
       child: ExpandedButtonsBar(info),
