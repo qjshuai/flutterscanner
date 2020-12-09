@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class CommonInkWell extends StatelessWidget {
-  CommonInkWell({this.child, this.decoration, this.onTap});
+class EffectInkWell extends StatelessWidget {
+  EffectInkWell({this.child, this.decoration, this.onTap});
 
   final Function() onTap;
   final Widget child;

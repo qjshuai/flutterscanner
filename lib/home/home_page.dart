@@ -6,7 +6,7 @@ import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:scanner/delivery/delivery_list_page.dart';
-import 'package:scanner/home/print_dialog.dart';
+import 'package:scanner/print/print_dialog.dart';
 import 'package:scanner/home/site.dart';
 import 'package:scanner/pickup/pickup_list_page.dart';
 import 'package:scanner/receipt/receipt_dialog.dart';
@@ -15,7 +15,7 @@ import 'package:environment/error_wrapper.dart';
 import 'package:package_info/package_info.dart';
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:scanner/widgets/CommonInkWell.dart';
+import 'package:scanner/widgets/effect_inkwell.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -353,7 +353,7 @@ class _HomePageState extends State<HomePage> {
         onRefresh: _onRefresh,
         onLoading: _onLoading,
         child: ListView.separated(
-            itemCount: _sites.length,
+            itemCount: _sites.length + 1,
             separatorBuilder: (context, index) => SizedBox(height: 10),
             itemBuilder: (context, index) {
               if (index == 0) {
@@ -361,10 +361,10 @@ class _HomePageState extends State<HomePage> {
               } else {
                 return ClipRRect(
                   borderRadius: BorderRadius.circular(10.0),
-                  child: CommonInkWell(
+                  child: EffectInkWell(
                     decoration: BoxDecoration(
                       color: Colors.white,
-                  ),
+                    ),
                     onTap: () async {
                       if ((_sites[index - 1].readyReceive ?? 0) < 1) {
                         Fluttertoast.cancel();
@@ -400,13 +400,11 @@ class _HomePageState extends State<HomePage> {
                                     .primaryTextTheme
                                     .bodyText2),
                             TextSpan(
-                                text:
-                                    '${_sites[index - 1].readyReceive}',
+                                text: '${_sites[index - 1].readyReceive}',
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodyText2
-                                    .copyWith(
-                                        color: Color(0xFFD43969))),
+                                    .copyWith(color: Color(0xFFD43969))),
                             TextSpan(
                                 text: ' 件',
                                 style: Theme.of(context)

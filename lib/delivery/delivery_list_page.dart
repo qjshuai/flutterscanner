@@ -6,11 +6,10 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
-import 'package:scanner/input/input_adjust.dart';
-import 'package:scanner/send/send_dialog.dart';
+import 'package:scanner/input/input_adjust_dialog.dart';
 import 'package:scanner/utils/custom_color.dart';
 import 'package:scanner/home/site.dart';
-import 'package:scanner/widgets/CommonInkWell.dart';
+import 'package:scanner/widgets/effect_inkwell.dart';
 import 'package:scanner/widgets/toast.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'delivery.dart';
@@ -359,7 +358,7 @@ class _DeliveryListPageState extends State<DeliveryListPage> {
           },
         ),
       ],
-      child: CommonInkWell(
+      child: EffectInkWell(
         onTap: () {
           setState(() {
             _isEditing = true;

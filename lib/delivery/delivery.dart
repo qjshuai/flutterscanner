@@ -4,6 +4,7 @@ class Delivery {
   final String createtime;
   final String statusName;
   final String headImgUrl;
+
   // 1 already  2 ready
   final int type;
   final String orderCode;
@@ -24,9 +25,11 @@ class Delivery {
       this.detailList});
 
   String get subTitle {
-    return detailList.map((e) {
-      return '${e.category ?? '未知品类'}${e.title ?? '未知价格'}元 ${e.amount ?? -1}件';
-    }).join('、');
+    return (detailList?.map((e) {
+              return '${e.category ?? '未知品类'}${e.title ?? '未知价格'}元 ${e.amount ?? -1}件';
+            })?.toList() ??
+            [])
+        .join('、');
   }
 
   factory Delivery.fromJson(Map<String, dynamic> json) {
@@ -40,8 +43,9 @@ class Delivery {
       statusName: json['statusName'],
       headImgUrl: json['headImgUrl'],
       detailList: (json['detailList'] as List<dynamic>)
-          .map((e) => DeliveryDetail.fromJson(e))
-          .toList(),
+              ?.map((e) => DeliveryDetail.fromJson(e))
+              ?.toList() ??
+          [],
     );
   }
 }

@@ -15,11 +15,6 @@ class PrintDialog extends StatefulWidget {
 }
 
 class _PrintDialogState extends State<PrintDialog> {
-
-  // Widget _buildInput(BuildContext context) {
-  //   [0,1, 2, 3].map((e) => null)
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Dialog(

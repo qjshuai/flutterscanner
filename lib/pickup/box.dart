@@ -1,3 +1,5 @@
+import 'package:scanner/receipt/receipt_info.dart';
+
 class Box {
   final int orderId;
   final String orderCode;
@@ -11,9 +13,22 @@ class Box {
   final String address;
   final List<BoxDetail> details;
   final List<String> pics;
+  final int parcelNum;
+
+  List<ReceiptFeature> features;
+
+  bool needRefresh = false;
+
+  String get featuresString {
+    if (features.isEmpty) {
+      return "无";
+    }
+    return features.map((e) => e.name ?? '无').join("、");
+  }
 
   Box(
-      {this.orderId,
+      {this.parcelNum,
+      this.orderId,
       this.orderCode,
       this.nickname,
       this.status,
@@ -22,17 +37,21 @@ class Box {
       this.details,
       this.pics,
       this.headImgUrl,
-      this.address});
+      this.address,
+      this.features});
 
   String get subTitle {
-    return details.map((e) {
-      return '${e.category ?? '未知品类'}${e.title ?? '未知价格'}元 ${e.amount ?? -1}件';
-    }).join('、');
+    return (details?.map((e) {
+              return '${e.category ?? '未知品类'}${e.title ?? '未知价格'}元 ${e.amount ?? -1}件';
+            })?.toList() ??
+            [])
+        .join('、');
   }
 
   factory Box.fromJson(Map<String, dynamic> json) {
     return Box(
       orderId: json['orderId'],
+      parcelNum: json['parcelNum'],
       orderCode: json['orderCode'],
       nickname: json['nickname'],
       status: json['status'],
@@ -40,9 +59,14 @@ class Box {
       tel: json['tel'],
       headImgUrl: json['headImgUrl'],
       address: json['address'],
+      features: (json['features'] as List<dynamic>)
+              ?.map((e) => ReceiptFeature.fromJson(e))
+              ?.toList() ??
+          [],
       details: (json['details'] as List<dynamic>)
-          .map((e) => BoxDetail.fromJson(e))
-          .toList(),
+              ?.map((e) => BoxDetail.fromJson(e))
+              ?.toList() ??
+          [],
       // pics: json['pics'],
     );
   }

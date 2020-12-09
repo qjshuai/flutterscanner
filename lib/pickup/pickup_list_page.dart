@@ -2,13 +2,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:environment/service_center.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
-import 'package:scanner/input/input_adjust.dart';
+import 'package:scanner/pickup/pickup_dialog.dart';
 import 'package:scanner/utils/custom_color.dart';
-import 'package:scanner/widgets/CommonInkWell.dart';
+import 'package:scanner/widgets/effect_inkwell.dart';
 import 'package:scanner/widgets/toast.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../utils/error_envelope.dart';
@@ -20,6 +19,7 @@ class PickupListPage extends StatefulWidget {
 }
 
 class _PickupListPageState extends State<PickupListPage> {
+  String  _lastKeywords;
   final _controller = TextEditingController();
   final _refreshController = RefreshController(initialRefresh: true);
   List<Box> _deliveries = [];
@@ -38,7 +38,7 @@ class _PickupListPageState extends State<PickupListPage> {
     final http = GetIt.instance.get<ServiceCenter>().httpService;
     final response = await http.get('/roshine/orden/selectReadyReceiveOrders',
         queryParameters: {
-          'serviceCode': _controller.text ?? '',
+          'keyword': _controller.text ?? '',
           'pageNum': _page,
           'pageSize': 50
         });
@@ -107,33 +107,57 @@ class _PickupListPageState extends State<PickupListPage> {
     print(bottom);
     return Scaffold(
       backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: Text('待收件'),
         elevation: 0,
       ),
-      body: Stack(
-        children: [
-          Container(
-              decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor,
-                  image: DecorationImage(
-                    image: AssetImage(
-                      'assets/images/logo.png',
-                    ),
-                    alignment: Alignment(0, -0.65),
-                    scale: 2.0,
-                  ))),
-          AnimatedPositioned(
-              duration: const Duration(milliseconds: 300),
-              left: 0,
-              right: 0,
-              bottom: 0,
-              top: 0,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-                child: _buildPickupList(context),
-              )),
-        ],
+      body: Container(
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        decoration: BoxDecoration(
+            color: Theme.of(context).primaryColor,
+            image: DecorationImage(
+              image: AssetImage(
+                'assets/images/logo.png',
+              ),
+              alignment: Alignment(0, -0.65),
+              fit: BoxFit.scaleDown,
+              scale: 2.0,
+            )),
+        child: Column(
+          children: [
+            SizedBox(
+              height: 50,
+              child: CupertinoTextField(
+                controller: _controller,
+                onEditingComplete: (){
+                  FocusScope.of(context).unfocus();
+                  if (_lastKeywords == _controller.text) {
+                    return;
+                  }
+                  _lastKeywords = _controller.text;
+                  _refreshController.requestRefresh();
+                },
+                placeholder: '请输入关键词检索',
+                textAlign: TextAlign.center,
+                cursorColor: Colors.white,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                ),
+                placeholderStyle: TextStyle(
+                  color: Colors.white.withAlpha(55),
+                  fontSize: 15,
+                ),
+                decoration: BoxDecoration(
+                    color: Color(0xFF3D5055),
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+            SizedBox(height: 10),
+            Expanded(child: _buildPickupList(context))
+          ],
+        ),
       ),
     );
   }
@@ -167,8 +191,19 @@ class _PickupListPageState extends State<PickupListPage> {
   Widget _buildCell(BuildContext context, int index, Box box) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(10.0),
-      child: CommonInkWell(
-        onTap: () {},
+      child: EffectInkWell(
+        onTap: () async {
+          if (box.status != 6 && box.status != 7) {
+            showToast('非待收件或待揽收订单');
+            return;
+          }
+          await showPickupDialog(context, box: box);
+          if (box.needRefresh) {
+            //更新数据
+            box.needRefresh = false;
+            _onRefresh();
+          }
+        },
         decoration: BoxDecoration(
           color: Colors.white,
         ),

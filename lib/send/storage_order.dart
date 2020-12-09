@@ -12,22 +12,22 @@ class SendOrder {
         orderIds = null,
         actuallyPrice = checkDouble(json['actuallyPrice']),
         orderDetails = (json['orderDetails'] as List<dynamic>)
-            .map((e) => SendOrderDetails.fromJson(e))
-            .toList(),
+            ?.map((e) => SendOrderDetails.fromJson(e))
+            ?.toList() ?? [],
         stationList = (json['stationList'] as List<dynamic>)
-            .map((e) => SendStation.fromJson(e))
-            .toList();
+            ?.map((e) => SendStation.fromJson(e))
+            ?.toList() ?? [];
 
   SendOrder.fromAdjustJson(Map<String, dynamic> json)
       : defaultPostStationId = json['defaultPostStationId'],
         actuallyPrice = checkDouble(json['actuallyPrice']),
         orderIds = json['orderIds'],
         orderDetails = (json['details'] as List<dynamic>)
-            .map((e) => SendOrderDetails.fromJson(e))
-            .toList(),
+            ?.map((e) => SendOrderDetails.fromJson(e))
+            ?.toList() ?? [],
         stationList = (json['stationList'] as List<dynamic>)
-            .map((e) => SendStation.fromJson(e))
-            .toList();
+            ?.map((e) => SendStation.fromJson(e))
+            ?.toList() ?? [];
 }
 
 double checkDouble(dynamic value) {
