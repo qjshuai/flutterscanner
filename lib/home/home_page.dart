@@ -5,19 +5,17 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
-import 'package:quiver/strings.dart';
 import 'package:scanner/delivery/delivery_list_page.dart';
 import 'package:scanner/home/print_dialog.dart';
 import 'package:scanner/home/site.dart';
-import 'package:scanner/input/input_adjust.dart';
-import 'package:scanner/input/input_order.dart';
+import 'package:scanner/pickup/pickup_list_page.dart';
 import 'package:scanner/receipt/receipt_dialog.dart';
 import 'package:scanner/send/send_dialog.dart';
 import 'package:environment/error_wrapper.dart';
 import 'package:package_info/package_info.dart';
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:scanner/widgets/toast.dart';
+import 'package:scanner/widgets/CommonInkWell.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -321,7 +319,11 @@ class _HomePageState extends State<HomePage> {
                     Expanded(
                         child: _buildToolItem(
                             context, '待收件', 4, 'assets/images/box.png',
-                            onPressed: () => showToast('尚不支持该功能'))),
+                            onPressed: () => Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                      builder: (context) => PickupListPage(),
+                                      settings: RouteSettings(arguments: 1)),
+                                ))),
                   ],
                 )
               ]),
@@ -350,78 +352,75 @@ class _HomePageState extends State<HomePage> {
         controller: _refreshController,
         onRefresh: _onRefresh,
         onLoading: _onLoading,
-        child: ListView.builder(
+        child: ListView.separated(
             itemCount: _sites.length,
+            separatorBuilder: (context, index) => SizedBox(height: 10),
             itemBuilder: (context, index) {
               if (index == 0) {
                 return _buildHeader(context);
               } else {
-                return InkWell(
-                  onTap: () async {
-                    if ((_sites[index - 1].readyReceive ?? 0) < 1) {
-                      Fluttertoast.cancel();
-                      Fluttertoast.showToast(
-                          msg: '无待取件', gravity: ToastGravity.CENTER);
-                      return;
-                    }
-                    await Navigator.of(context).push(
-                      MaterialPageRoute(
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(10.0),
+                  child: CommonInkWell(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                  ),
+                    onTap: () async {
+                      if ((_sites[index - 1].readyReceive ?? 0) < 1) {
+                        Fluttertoast.cancel();
+                        Fluttertoast.showToast(
+                            msg: '无待取件', gravity: ToastGravity.CENTER);
+                        return;
+                      }
+                      await Navigator.of(context).push(
+                        MaterialPageRoute(
                           builder: (context) =>
                               DeliveryListPage(_sites[index - 1]),
-                          settings: RouteSettings(arguments: 1)),
-                    );
-                    _onRefresh();
-                  },
-                  child: Column(
-                    children: [
-                      SizedBox(
-                          height: 50,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10.0),
-                            child: Container(
-                              color: Colors.white,
-                              padding: EdgeInsets.symmetric(horizontal: 14.0),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    _sites[index - 1].stationName,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .subtitle1
-                                        .copyWith(color: Color(0xFF263336)),
-                                  ),
-                                  Spacer(),
-                                  Text.rich(TextSpan(children: [
-                                    TextSpan(
-                                        text: '待取件 ',
-                                        style: Theme.of(context)
-                                            .primaryTextTheme
-                                            .bodyText2),
-                                    TextSpan(
-                                        text:
-                                            '${_sites[index - 1].readyReceive}',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyText2
-                                            .copyWith(
-                                                color: Color(0xFFD43969))),
-                                    TextSpan(
-                                        text: ' 件',
-                                        style: Theme.of(context)
-                                            .primaryTextTheme
-                                            .bodyText2),
-                                  ])),
-                                  SizedBox(width: 10.0),
-                                  Icon(
-                                    Icons.arrow_forward_ios_sharp,
-                                    size: 11,
-                                  )
-                                ],
-                              ),
-                            ),
-                          )),
-                      SizedBox(height: 10.0)
-                    ],
+                        ),
+                      );
+                      _onRefresh();
+                    },
+                    child: Container(
+                      height: 50,
+                      padding: EdgeInsets.symmetric(horizontal: 14.0),
+                      child: Row(
+                        children: [
+                          Text(
+                            _sites[index - 1].stationName,
+                            style: Theme.of(context)
+                                .textTheme
+                                .subtitle1
+                                .copyWith(color: Color(0xFF263336)),
+                          ),
+                          Spacer(),
+                          Text.rich(TextSpan(children: [
+                            TextSpan(
+                                text: '待取件 ',
+                                style: Theme.of(context)
+                                    .primaryTextTheme
+                                    .bodyText2),
+                            TextSpan(
+                                text:
+                                    '${_sites[index - 1].readyReceive}',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyText2
+                                    .copyWith(
+                                        color: Color(0xFFD43969))),
+                            TextSpan(
+                                text: ' 件',
+                                style: Theme.of(context)
+                                    .primaryTextTheme
+                                    .bodyText2),
+                          ])),
+                          SizedBox(width: 10.0),
+                          Icon(
+                            Icons.arrow_forward_ios_sharp,
+                            size: 11,
+                          )
+                        ],
+                      ),
+                    ),
                   ),
                 );
               }

@@ -10,6 +10,7 @@ import 'package:scanner/input/input_adjust.dart';
 import 'package:scanner/send/send_dialog.dart';
 import 'package:scanner/utils/custom_color.dart';
 import 'package:scanner/home/site.dart';
+import 'package:scanner/widgets/CommonInkWell.dart';
 import 'package:scanner/widgets/toast.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'delivery.dart';
@@ -346,7 +347,7 @@ class _DeliveryListPageState extends State<DeliveryListPage> {
           ),
           onTap: () async {
             if (delivery.tel == null || delivery.tel == '') {
-              showToast("无客户号码");
+              showToast("该客户无号码");
               return;
             }
             final scheme = 'tel:${delivery.tel}';
@@ -358,24 +359,23 @@ class _DeliveryListPageState extends State<DeliveryListPage> {
           },
         ),
       ],
-      child: GestureDetector(
+      child: CommonInkWell(
         onTap: () {
           setState(() {
             _isEditing = true;
             delivery.isSelected = !delivery.isSelected;
           });
         },
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(
+              color:
+                  delivery.isSelected ? Color(0xFFFE5D01) : Colors.transparent,
+              width: 2),
+          borderRadius: BorderRadius.circular(10.0),
+        ),
         child: Container(
           height: 84.0,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(
-                color: delivery.isSelected
-                    ? Color(0xFFFE5D01)
-                    : Colors.transparent,
-                width: 2),
-            borderRadius: BorderRadius.circular(10.0),
-          ),
           padding: EdgeInsets.symmetric(horizontal: 15.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -452,7 +452,7 @@ class _DeliveryListPageState extends State<DeliveryListPage> {
                     margin: EdgeInsets.only(top: 15.0),
                     child: Center(
                       child: Text(
-                        delivery.statusName ?? '未知状态',
+                        delivery.statusName ?? '未知',
                         style: TextStyle(color: Colors.white, fontSize: 10),
                       ),
                     ),

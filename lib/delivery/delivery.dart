@@ -25,7 +25,7 @@ class Delivery {
 
   String get subTitle {
     return detailList.map((e) {
-      return '${e.category}${e.title}元 ${e.amount}件';
+      return '${e.category ?? '未知品类'}${e.title ?? '未知价格'}元 ${e.amount ?? -1}件';
     }).join('、');
   }
 

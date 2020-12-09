@@ -42,7 +42,7 @@ Future<List<BlocProvider>> setup() async {
     } else {
       final env = Environment(
           name: 'development',
-          baseUrl: 'https://wechat.roshinediy.com',
+          baseUrl: 'http://172.16.178.16:8081',
           isDebug: true,
           logMode: LogMode.verbose);
       defaultState = AppState(settings: settings, environment: env);
@@ -55,16 +55,14 @@ Future<List<BlocProvider>> setup() async {
       //生产环境使用默认环境设置
       appState = appState.update(environment: defaultState.environment);
     }
-    final database = await openDatabase('data.db');
-    final databaseWrapper = DatabaseWrapper(database);
 
     final getIt = GetIt.instance;
     if (inProduction) {
       getIt.registerSingleton<ServiceCenter>(
-          ServiceCenter.production(appState, preferenceBox, databaseWrapper));
+          ServiceCenter.production(appState, preferences: preferenceBox));
     } else {
       getIt.registerSingleton<ServiceCenter>(
-          ServiceCenter.development(appState, preferenceBox, databaseWrapper));
+          ServiceCenter.development(appState, preferences: preferenceBox));
     }
     final appBloc = AppBloc(appState);
     getIt.registerSingleton<AppBloc>(appBloc);
@@ -130,7 +128,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  NavigatorState get _navigator => widget._navigatorKey.currentState;
   final getIt = GetIt.instance;
 
   @override
