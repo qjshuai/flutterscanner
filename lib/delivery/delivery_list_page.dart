@@ -418,6 +418,8 @@ class _DeliveryListPageState extends State<DeliveryListPage> {
                 // mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(delivery.nickname ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: Theme.of(context)
                           .primaryTextTheme
                           .bodyText1

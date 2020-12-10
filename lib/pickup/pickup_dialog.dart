@@ -137,21 +137,23 @@ class _PickupDialogState extends State<PickupDialog> {
   Widget build(BuildContext context) {
     return Dialog(
         backgroundColor: Colors.transparent,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10.0),
-            color: Colors.white,
-          ),
-          padding: EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(height: 35 + 12.0, child: _buildStatus(context)),
-              SizedBox(height: 35),
-              Divider(height: 0.5, color: Color(0xFFCCCCCC)),
-              _buildOrder(context),
-              SizedBox(height: 60.0, child: _buildBottomBar(context)),
-            ],
+        child: SingleChildScrollView(
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10.0),
+              color: Colors.white,
+            ),
+            padding: EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(height: 30 + 12.0, child: _buildStatus(context)),
+                SizedBox(height: 30),
+                Divider(height: 0.5, color: Color(0xFFCCCCCC)),
+                _buildOrder(context),
+                SizedBox(height: 60.0, child: _buildBottomBar(context)),
+              ],
+            ),
           ),
         ));
   }
@@ -180,11 +182,11 @@ class _PickupDialogState extends State<PickupDialog> {
   Widget _buildOrder(BuildContext context) {
     final box = widget.box;
     var children = [
-      SizedBox(height: 25),
+      SizedBox(height: 20),
       Row(
         children: [
-          Expanded(child: _buildCell('客户名', box.nickname ?? '无')),
-          Expanded(child: _buildCell('手机号', box.tel ?? '无')),
+          Expanded(flex: 4,child: _buildCell('客户名', box.nickname ?? '无')),
+          Expanded(flex: 5,child: _buildCell('手机号', box.tel ?? '无')),
         ],
       ),
       _buildCell('订单号', box.orderCode ?? '无'),

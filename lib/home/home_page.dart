@@ -16,6 +16,7 @@ import 'package:package_info/package_info.dart';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:scanner/widgets/effect_inkwell.dart';
+import 'package:scanner/widgets/toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -319,11 +320,13 @@ class _HomePageState extends State<HomePage> {
                     Expanded(
                         child: _buildToolItem(
                             context, '待收件', 4, 'assets/images/box.png',
-                            onPressed: () => Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                      builder: (context) => PickupListPage(),
-                                      settings: RouteSettings(arguments: 1)),
-                                ))),
+                            onPressed: () {
+                      // showToast('尚不支持该功能');
+                      // return;
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => PickupListPage(),
+                          settings: RouteSettings(arguments: 1)));
+                    })),
                   ],
                 )
               ]),
