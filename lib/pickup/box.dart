@@ -7,6 +7,8 @@ class Box {
 
   // 6 待入袋 7 待揽收
   final int status;
+  final String latitude;
+  final String longitude;
   final String statusName;
   final String tel;
   final String headImgUrl;
@@ -37,6 +39,8 @@ class Box {
       this.details,
       this.pics,
       this.headImgUrl,
+      this.latitude,
+      this.longitude,
       this.address,
       this.features});
 
@@ -56,6 +60,8 @@ class Box {
       nickname: json['nickname'],
       status: json['status'],
       statusName: json['statusName'],
+      latitude: json['latitude'],
+      longitude: json['longitude'],
       tel: json['tel'],
       headImgUrl: json['headImgUrl'],
       address: json['address'],

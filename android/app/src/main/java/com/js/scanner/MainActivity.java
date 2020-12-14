@@ -5,12 +5,20 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Debug;
 import android.view.View;
+import android.widget.Toast;
 
 import java.io.File;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 
+import io.flutter.Log;
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.MethodCall;
@@ -41,12 +49,61 @@ public class MainActivity extends FlutterActivity implements EasyPermissions.Per
                         MainActivity.this.result = result;
                         if (call.method.equals("scan")) {
                             startScan();
+                        } else if (call.method.equals("launchRoute")) {
+                            Double latitude = call.argument("latitude");
+                            Double longitude = call.argument("longitude");
+                            String address = call.argument("address");
+
+                            Log.d("longitude", longitude.toString());
+                            startRoute(latitude, longitude, address);
                         } else {
 //                    result.error("", "", null);
 //                    MainActivity.this.setResult(null);
                         }
                     }
                 });
+    }
+
+    public static boolean isAvilible(Context context, String packageName){
+        //获取packagemanager   
+        final PackageManager packageManager = context.getPackageManager();
+        //获取所有已安装程序的包信息   
+        List<PackageInfo> packageInfos = packageManager.getInstalledPackages(0);
+        //用于存储所有已安装程序的包名   
+        List<String> packageNames = new ArrayList<String>();
+        //从pinfo中将包名字逐一取出，压入pName list中   
+        if(packageInfos != null){
+            for(int i = 0; i < packageInfos.size(); i++){
+                String packName = packageInfos.get(i).packageName;
+                packageNames.add(packName);
+            }
+        }
+        //判断packageNames中是否有目标程序的包名，有TRUE，没有FALSE   
+        return packageNames.contains(packageName);
+    }
+
+    private void startRoute(Double lat, Double lon, String address) {
+        if (isAvilible(this, "com.autonavi.minimap")) {
+            try {
+                String url = "androidamap://route?sourceApplication=scanner&dpoiname="+ address +"&dlat=" + lat + "&dlon=" + lon + "&dev=0";
+               Intent intent = Intent.getIntent(url);
+                Log.d("intent", intent.toString());
+                Log.d("url", url);
+               this.startActivity(intent);
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+            }
+        } else {
+            Toast.makeText(this, "您尚未安装高德地图", Toast.LENGTH_LONG).show();
+            Uri uri = Uri.parse("market://details?id=com.autonavi.minimap");
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            this.startActivity(intent);
+        }
+//        act=android.intent.action.VIEW
+//        cat=android.intent.category.DEFAULT
+//        dat=amapuri://route/plan/?sid=&slat=39.92848272&slon=116.39560823&sname=A&did=&dlat=39.98848272&dlon=116.47560823&dname=B&dev=0&t=0
+//        pkg=com.autonavi.minimap
+
     }
 
     //注册广播

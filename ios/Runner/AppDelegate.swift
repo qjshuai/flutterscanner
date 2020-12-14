@@ -1,6 +1,7 @@
 import UIKit
 import Flutter
 import Scanner
+import MapKit
 
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate {
@@ -36,6 +37,47 @@ import Scanner
                         }
                     }
                     self.window.rootViewController?.present(scanner, animated: true, completion: nil)
+                } else if (call.method == "launchRoute") {
+                    guard let params = call.arguments as? [String: Any],
+                          let latitude = params["latitude"] as? Double,
+                          let longitude = params["longitude"] as? Double else {
+                        result(nil)
+                        return
+                    }
+                    let address = params["address"] as? String ?? ""
+                    let amapScheme = URL(string: "iosamap://")!
+                    if UIApplication.shared.canOpenURL(amapScheme) {
+                        //调用高德
+                        let url = "iosamap://path?sourceApplication=scanner&poiid=BGVIS&dlat=\(latitude)&dlon=\(longitude)&dev=0&style=2&dname=\(address)"
+                        self.launchScheme(urlString: url)
+                    } else {
+//                        let baiduScheme = URL(string: "baidumap://")!
+//                        if UIApplication.shared.canOpenURL(baiduScheme) {
+//                            //调用百度
+//                            let url =  "baidumap://map/direction?&destination=latlng:\(latitude),\(longitude)|name:\(address)&mode=driving" //transit, walking
+//                            self.launchScheme(urlString: url)
+//                        } else {
+                            //调用本机, 使用地址导航
+                            let current = MKMapItem.forCurrentLocation()
+                            let target = MKMapItem(placemark: MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: latitude, longitude: longitude)))
+                            target.name = address
+                            MKMapItem.openMaps(with: [current, target], launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving])
+//                        }
+                    }
+
+
+
+
+                    //                    MKMapItem *currentLocation = [MKMapItem mapItemForCurrentLocation];
+                    //                    MKMapItem *toLocation = [[MKMapItem alloc] initWithPlacemark:[[MKPlacemark alloc] initWithCoordinate:CLLocationCoordinate2DMake(self.lat.floatValue, self.lon.floatValue) addressDictionary:nil]]; //目的地坐标
+                    //                        toLocation.name = self.destination; //目的地名字
+                    //                    [MKMapItem openMapsWithItems:@[currentLocation, toLocation] launchOptions:@{MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeWalking,MKLaunchOptionsShowsTrafficKey: [NSNumber numberWithBool:NO]}];
+
+
+                } else if (call.method == "launchQueryRoute") {
+
+
+
                 } else {
                     result(nil)
                 }
@@ -43,6 +85,17 @@ import Scanner
         }
 
         return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    }
+
+    private func launchScheme(urlString: String) {
+        let url = URL(string: urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)!
+        if #available(iOS 10.0, *) {
+            UIApplication.shared.open(url, options: [:]) { success in
+
+            }
+        } else {
+            UIApplication.shared.open(url)
+        }
     }
 
     private func checkScanPermissions() -> Bool {

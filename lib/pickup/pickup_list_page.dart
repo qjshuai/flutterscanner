@@ -4,14 +4,19 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
+import 'package:maps_launcher/maps_launcher.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:quiver/strings.dart';
 import 'package:scanner/pickup/pickup_dialog.dart';
+import 'package:scanner/utils/constants.dart';
 import 'package:scanner/utils/custom_color.dart';
 import 'package:scanner/widgets/effect_inkwell.dart';
 import 'package:scanner/widgets/toast.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../utils/error_envelope.dart';
 import 'box.dart';
+import 'dart:io';
+import 'package:flutter/services.dart';
 
 class PickupListPage extends StatefulWidget {
   @override
@@ -19,7 +24,7 @@ class PickupListPage extends StatefulWidget {
 }
 
 class _PickupListPageState extends State<PickupListPage> {
-  String  _lastKeywords;
+  String _lastKeywords;
   final _controller = TextEditingController();
   final _refreshController = RefreshController(initialRefresh: true);
   List<Box> _deliveries = [];
@@ -130,7 +135,7 @@ class _PickupListPageState extends State<PickupListPage> {
               height: 50,
               child: CupertinoTextField(
                 controller: _controller,
-                onEditingComplete: (){
+                onEditingComplete: () {
                   FocusScope.of(context).unfocus();
                   if (_lastKeywords == _controller.text) {
                     return;
@@ -308,23 +313,50 @@ class _PickupListPageState extends State<PickupListPage> {
               Divider(height: 0.5, color: Color(0xFFD2DDDD)),
               SizedBox(
                 height: 50,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Image.asset('assets/images/address.png',
-                        width: 15, height: 17),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        box.address ?? '无',
-                        maxLines: 2,
-                        style: TextStyle(
-                            color: Theme.of(context).primaryColor,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 13),
-                      ),
-                    )
-                  ],
+                child: CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  onPressed: () async {
+                    final address = box.address;
+                    final latitude = double.tryParse(box.latitude);
+                    final longitude = double.tryParse(box.longitude);
+                    try {
+
+                      if (latitude == null || longitude == null) {
+                        // if (isEmpty(address)) {
+                        showToast('终点坐标无效无效');
+                        return;
+                        // }
+                        // showToast('终点坐标无效, 将根据地址查找路线, 请确认终点是否正确');
+                        // nativeChannel.invokeMethod('launchRoute', {'latitude': latitude, 'longitude': longitude, 'address': address});
+                      } else {
+                        nativeChannel.invokeMethod('launchRoute', {
+                          'latitude': latitude,
+                          'longitude': longitude,
+                          'address': address
+                        });
+                      }
+                    } catch (e) {
+                      showToast('启动导航失败, 请检查是否已安装导航软件');
+                    }
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Image.asset('assets/images/address.png',
+                          width: 15, height: 17),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          box.address ?? '无',
+                          maxLines: 2,
+                          style: TextStyle(
+                              color: Theme.of(context).primaryColor,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 13),
+                        ),
+                      )
+                    ],
+                  ),
                 ),
               )
             ],

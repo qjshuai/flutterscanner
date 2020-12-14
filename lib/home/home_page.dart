@@ -321,8 +321,6 @@ class _HomePageState extends State<HomePage> {
                         child: _buildToolItem(
                             context, '待收件', 4, 'assets/images/box.png',
                             onPressed: () {
-                      // showToast('尚不支持该功能');
-                      // return;
                       Navigator.of(context).push(MaterialPageRoute(
                           builder: (context) => PickupListPage(),
                           settings: RouteSettings(arguments: 1)));
