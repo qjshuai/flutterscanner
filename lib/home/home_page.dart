@@ -5,7 +5,10 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:quiver/strings.dart';
 import 'package:scanner/delivery/delivery_list_page.dart';
+import 'package:scanner/input/input_adjust_dialog.dart';
+import 'package:scanner/input/input_order_dialog.dart';
 import 'package:scanner/print/print_dialog.dart';
 import 'package:scanner/home/site.dart';
 import 'package:scanner/pickup/pickup_list_page.dart';
@@ -262,22 +265,22 @@ class _HomePageState extends State<HomePage> {
               '工具列表',
               style: Theme.of(context).primaryTextTheme.headline4,
             ),
-            // CupertinoButton(
-            //     child: Row(
-            //       children: [
-            //         Image.asset('assets/images/print.png',
-            //             color: Colors.white, width: 15.0, height: 15.0),
-            //         SizedBox(width: 5),
-            //         Text(
-            //           '打印',
-            //           style: TextStyle(
-            //               color: Colors.white,
-            //               fontSize: 13.0,
-            //               fontWeight: FontWeight.w500),
-            //         ),
-            //       ],
-            //     ),
-            //     onPressed: () => _startPrint(context)),
+            CupertinoButton(
+                child: Row(
+                  children: [
+                    Image.asset('assets/images/edit.png',
+                        color: Colors.white, width: 15.0, height: 15.0),
+                    SizedBox(width: 5),
+                    Text(
+                      '手动录入',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 13.0,
+                          fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+                onPressed: () => _startInput(context)),
           ],
         ),
         SizedBox(height: 20.0),
@@ -424,5 +427,16 @@ class _HomePageState extends State<HomePage> {
                 );
               }
             }));
+  }
+
+
+  void _startInput(BuildContext context) async {
+    final code = await showInputOrderDialog(context);
+    if (isNotEmpty(code)) {
+      final result = await showInputAdjustDialog(context, code);
+      if (result) {
+        _startInput(context);
+      }
+    }
   }
 }

@@ -168,6 +168,7 @@ class _PickupListPageState extends State<PickupListPage> {
   }
 
   Widget _buildPickupList(BuildContext context) {
+    print(_deliveries);
     return SmartRefresher(
         enablePullDown: true,
         enablePullUp: true,
@@ -226,14 +227,24 @@ class _PickupListPageState extends State<PickupListPage> {
                         padding: EdgeInsets.only(top: 15),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(4.0),
-                          child: CachedNetworkImage(
-                            errorWidget: (context, _, __) =>
-                                Container(color: Colors.grey),
-                            imageUrl: box.headImgUrl ?? '',
-                            width: 50.0,
-                            height: 50.0,
-                            fit: BoxFit.cover,
-                          ),
+                          child: isEmpty(box.headImgUrl)
+                              ? Image.asset(
+                                  'assets/images/avatar_placeholder.png',
+                                  width: 50.0,
+                                  height: 50.0,
+                                )
+                              : CachedNetworkImage(
+                                  errorWidget: (context, mes, url) {
+                                    return Image.asset(
+                                        'assets/images/avatar_placeholder.png',
+                                        width: 50.0,
+                                        height: 50.0);
+                                  },
+                                  imageUrl: box.headImgUrl,
+                                  width: 50.0,
+                                  height: 50.0,
+                                  fit: BoxFit.cover,
+                                ),
                         )),
                     SizedBox(width: 10.0),
                     Expanded(
@@ -320,10 +331,12 @@ class _PickupListPageState extends State<PickupListPage> {
                     final latitude = double.tryParse(box.latitude);
                     final longitude = double.tryParse(box.longitude);
                     try {
-
+                      // if (isEmpty(address)) {
+                      print(latitude);
+                      print(longitude);
+                      print(address);
+                      showToast('终点坐标无效无效');
                       if (latitude == null || longitude == null) {
-                        // if (isEmpty(address)) {
-                        showToast('终点坐标无效无效');
                         return;
                         // }
                         // showToast('终点坐标无效, 将根据地址查找路线, 请确认终点是否正确');

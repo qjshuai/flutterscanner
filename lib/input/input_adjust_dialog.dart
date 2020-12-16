@@ -138,7 +138,6 @@ class _InputAdjustDialogState extends State<InputAdjustDialog> {
     if (_scanState is ScanningState || _scanState is FetchingErrorState) {
       child = null;
     } else if (_scanState is FetchingState || _scanState is SubmittingState) {
-      print('显示loading');
       child = Center(child: CircularProgressIndicator());
     } else {
       child = Container(

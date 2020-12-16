@@ -85,10 +85,10 @@ public class MainActivity extends FlutterActivity implements EasyPermissions.Per
     private void startRoute(Double lat, Double lon, String address) {
         if (isAvilible(this, "com.autonavi.minimap")) {
             try {
-                String url = "androidamap://route?sourceApplication=scanner&dpoiname="+ address +"&dlat=" + lat + "&dlon=" + lon + "&dev=0";
+                String url = "androidamap://route/plan?sourceApplication=scanner&t=0&dname="+ address +"&dlat=" + lat + "&dlon=" + lon + "&dev=0";
                Intent intent = Intent.getIntent(url);
-                Log.d("intent", intent.toString());
-                Log.d("url", url);
+//                Log.d("intent", intent.toString());
+//                Log.d("url", url);
                this.startActivity(intent);
             } catch (URISyntaxException e) {
                 e.printStackTrace();
