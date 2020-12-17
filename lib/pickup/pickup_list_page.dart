@@ -118,14 +118,16 @@ class _PickupListPageState extends State<PickupListPage> {
               child: Text('高德地图'),
             ),
             CupertinoButton(
-              onPressed: () {
-                final result = _convertBaiduCoordinate(lat: lat, lon: lon);
-                _launchMap(context,
-                    type: 'baidu',
-                    lon: result['lon'],
-                    lat: result['lat'],
-                    address: address);
-              },
+              onPressed: () => _launchMap(context,
+                  type: 'baidu', lon: lon, lat: lat, address: address),
+              // onPressed: () {
+              //   final result = _convertBaiduCoordinate(lat: lat, lon: lon);
+              //   _launchMap(context,
+              //       type: 'baidu',
+              //       lon: result['lon'],
+              //       lat: result['lat'],
+              //       address: address);
+              // },
               child: Text('百度地图'),
             )
           ];
@@ -165,6 +167,10 @@ class _PickupListPageState extends State<PickupListPage> {
   /// 启动地图
   void _launchMap(BuildContext context,
       {String type, double lat, double lon, String address}) {
+    print(type);
+    print(lat);
+    print(lon);
+    print(address);
     try {
       nativeChannel.invokeMethod('launchRoute', {
         'latitude': lat,

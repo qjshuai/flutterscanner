@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Debug;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -18,7 +19,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.flutter.Log;
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.MethodCall;
@@ -53,9 +53,8 @@ public class MainActivity extends FlutterActivity implements EasyPermissions.Per
                             Double latitude = call.argument("latitude");
                             Double longitude = call.argument("longitude");
                             String address = call.argument("address");
-
-                            Log.d("longitude", longitude.toString());
-                            startRoute(latitude, longitude, address);
+                            String type = call.argument("type");
+                            startRoute(latitude, longitude, address, type);
                         } else {
 //                    result.error("", "", null);
 //                    MainActivity.this.setResult(null);
@@ -82,28 +81,41 @@ public class MainActivity extends FlutterActivity implements EasyPermissions.Per
         return packageNames.contains(packageName);
     }
 
-    private void startRoute(Double lat, Double lon, String address) {
-        if (isAvilible(this, "com.autonavi.minimap")) {
-            try {
-                String url = "androidamap://route/plan?sourceApplication=scanner&t=0&dname="+ address +"&dlat=" + lat + "&dlon=" + lon + "&dev=0";
-               Intent intent = Intent.getIntent(url);
-//                Log.d("intent", intent.toString());
-//                Log.d("url", url);
+    private void startRoute(Double lat, Double lon, String address, String type) {
+        Log.d("Tag", "startRoute: " + address + type);
+       if (type.equals("baidu")) {
+           Log.d("baidu", "startRoute: " + address + type);
+           if (isAvilible(this, "com.baidu.BaiduMap")) {
+               try {
+                   String url = "baidumap://map/direction?mode=driving&coord_type=gcj02&destination=name:"+ address +"|latlng:" + lat + "," + lon;
+                   Intent intent = Intent.getIntent(url);
+                   this.startActivity(intent);
+               } catch (URISyntaxException e) {
+                   e.printStackTrace();
+               }
+           } else {
+               Toast.makeText(this, "您尚未安装百度地图", Toast.LENGTH_LONG).show();
+               Uri uri = Uri.parse("market://details?id=com.baidu.BaiduMap");
+               Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                this.startActivity(intent);
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
-            }
-        } else {
-            Toast.makeText(this, "您尚未安装高德地图", Toast.LENGTH_LONG).show();
-            Uri uri = Uri.parse("market://details?id=com.autonavi.minimap");
-            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-            this.startActivity(intent);
-        }
-//        act=android.intent.action.VIEW
-//        cat=android.intent.category.DEFAULT
-//        dat=amapuri://route/plan/?sid=&slat=39.92848272&slon=116.39560823&sname=A&did=&dlat=39.98848272&dlon=116.47560823&dname=B&dev=0&t=0
-//        pkg=com.autonavi.minimap
-
+           }
+       } else if (type.equals("amap")) {
+           Log.d("baidu", "startRoute: " + address + type);
+           if (isAvilible(this, "com.autonavi.minimap")) {
+               try {
+                   String url = "androidamap://route/plan?sourceApplication=scanner&t=0&dname="+ address +"&dlat=" + lat + "&dlon=" + lon + "&dev=0";
+                   Intent intent = Intent.getIntent(url);
+                   this.startActivity(intent);
+               } catch (URISyntaxException e) {
+                   e.printStackTrace();
+               }
+           } else {
+               Toast.makeText(this, "您尚未安装高德地图", Toast.LENGTH_LONG).show();
+               Uri uri = Uri.parse("market://details?id=com.autonavi.minimap");
+               Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+               this.startActivity(intent);
+           }
+       }
     }
 
     //注册广播

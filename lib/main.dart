@@ -40,7 +40,7 @@ Future<List<BlocProvider>> setup() async {
     } else {
       final env = Environment(
           name: 'development',
-          baseUrl: 'https://wechat.roshinediy.com',//http://172.16.178.16:8081
+          baseUrl: 'http://172.16.178.16:8081',//http://172.16.178.16:8081
           isDebug: true,
           logMode: LogMode.verbose);
       defaultState = AppState(settings: settings, environment: env);
@@ -53,7 +53,6 @@ Future<List<BlocProvider>> setup() async {
       //生产环境使用默认环境设置
       appState = appState.update(environment: defaultState.environment);
     }
-    appState = appState.update(environment: defaultState.environment);
     final getIt = GetIt.instance;
     if (inProduction) {
       getIt.registerSingleton<ServiceCenter>(
