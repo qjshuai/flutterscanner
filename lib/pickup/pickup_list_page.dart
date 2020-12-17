@@ -1,10 +1,12 @@
+import 'dart:io';
+import 'dart:math';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:environment/service_center.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
-import 'package:maps_launcher/maps_launcher.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:quiver/strings.dart';
 import 'package:scanner/pickup/pickup_dialog.dart';
@@ -15,8 +17,6 @@ import 'package:scanner/widgets/toast.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../utils/error_envelope.dart';
 import 'box.dart';
-import 'dart:io';
-import 'package:flutter/services.dart';
 
 class PickupListPage extends StatefulWidget {
   @override
@@ -103,6 +103,78 @@ class _PickupListPageState extends State<PickupListPage> {
       Fluttertoast.showToast(msg: ErrorEnvelope(e).toString());
       _page = _lastPage;
       _refreshController.loadFailed();
+    }
+  }
+
+  void _pickRoute(BuildContext context,
+      {double lat, double lon, String address}) {
+    showCupertinoModalPopup(
+        context: context,
+        builder: (context) {
+          final children = [
+            CupertinoButton(
+              onPressed: () => _launchMap(context,
+                  type: 'amap', lon: lon, lat: lat, address: address),
+              child: Text('高德地图'),
+            ),
+            CupertinoButton(
+              onPressed: () {
+                final result = _convertBaiduCoordinate(lat: lat, lon: lon);
+                _launchMap(context,
+                    type: 'baidu',
+                    lon: result['lon'],
+                    lat: result['lat'],
+                    address: address);
+              },
+              child: Text('百度地图'),
+            )
+          ];
+          if (Platform.isIOS) {
+            children.add(CupertinoButton(
+              onPressed: () => _launchMap(context,
+                  type: 'apple', lon: lon, lat: lat, address: address),
+              child: Text('苹果地图'),
+            ));
+          }
+          return CupertinoActionSheet(
+            title: Text(
+              "选择导航软件",
+              style: TextStyle(color: Colors.black),
+            ),
+            actions: children,
+            cancelButton: CupertinoButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('取消'),
+            ),
+          );
+        });
+  }
+
+  /// 转换百度坐标
+  Map<String, double> _convertBaiduCoordinate({double lat, double lon}) {
+    final xPi = pi * 3000.0 / 180.0;
+    final x = lon;
+    final y = lat;
+    final z = sqrt(x * x + y * y) + 0.00002 * sin(y * xPi);
+    final theta = atan2(y, x) + 0.000003 * cos(x * xPi);
+    final newLon = z * cos(theta) + 0.0065;
+    final newLat = z * sin(theta) + 0.006;
+    return {'lat': newLat, 'lon': newLon};
+  }
+
+  /// 启动地图
+  void _launchMap(BuildContext context,
+      {String type, double lat, double lon, String address}) {
+    try {
+      nativeChannel.invokeMethod('launchRoute', {
+        'latitude': lat,
+        'longitude': lon,
+        'address': address,
+        'type': type
+      });
+      Navigator.of(context).pop();
+    } catch (e) {
+      showToast('启动导航失败, 请检查是否已安装导航软件');
     }
   }
 
@@ -331,22 +403,20 @@ class _PickupListPageState extends State<PickupListPage> {
                     final latitude = double.tryParse(box.latitude);
                     final longitude = double.tryParse(box.longitude);
                     try {
-                      // if (isEmpty(address)) {
-                      print(latitude);
-                      print(longitude);
-                      print(address);
-                      showToast('终点坐标无效无效');
                       if (latitude == null || longitude == null) {
+                        showToast('终点坐标无效');
                         return;
                         // }
                         // showToast('终点坐标无效, 将根据地址查找路线, 请确认终点是否正确');
                         // nativeChannel.invokeMethod('launchRoute', {'latitude': latitude, 'longitude': longitude, 'address': address});
                       } else {
-                        nativeChannel.invokeMethod('launchRoute', {
-                          'latitude': latitude,
-                          'longitude': longitude,
-                          'address': address
-                        });
+                        _pickRoute(context,
+                            lat: latitude, lon: longitude, address: address);
+                        // nativeChannel.invokeMethod('launchRoute', {
+                        //   'latitude': latitude,
+                        //   'longitude': longitude,
+                        //   'address': address
+                        // });
                       }
                     } catch (e) {
                       showToast('启动导航失败, 请检查是否已安装导航软件');

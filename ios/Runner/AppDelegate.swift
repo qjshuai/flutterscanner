@@ -39,45 +39,36 @@ import MapKit
                     self.window.rootViewController?.present(scanner, animated: true, completion: nil)
                 } else if (call.method == "launchRoute") {
                     guard let params = call.arguments as? [String: Any],
+                          let type = params["type"] as? String,
+                          let address = params["address"] as? String,
                           let latitude = params["latitude"] as? Double,
                           let longitude = params["longitude"] as? Double else {
                         result(nil)
                         return
                     }
-                    let address = params["address"] as? String ?? ""
-                    let amapScheme = URL(string: "iosamap://")!
-                    if UIApplication.shared.canOpenURL(amapScheme) {
-                        //调用高德
-                        let url = "iosamap://path?sourceApplication=scanner&poiid=BGVIS&dlat=\(latitude)&dlon=\(longitude)&dev=0&style=2&dname=\(address)"
-                        self.launchScheme(urlString: url)
+                    if (type == "amap") {
+                        let scheme = URL(string: "iosamap://")!
+                        if UIApplication.shared.canOpenURL(scheme) {
+                            //调用高德
+                            let url = "iosamap://path?sourceApplication=scanner&poiid=BGVIS&dlat=\(latitude)&dlon=\(longitude)&dev=0&style=2&dname=\(address)"
+                            self.launchScheme(urlString: url)
+                        } else {
+                            self.launchAppStore(id: 461703208)
+                        }
+                    } else if (type == "baidu") {
+                        let scheme = URL(string: "baidumap://")!
+                        if UIApplication.shared.canOpenURL(scheme) {
+                            let url =  "baidumap://map/direction?&destination=latlng:\(latitude),\(longitude)|name:\(address)&mode=driving" //transit, walking
+                            self.launchScheme(urlString: url)
+                        } else {
+                            self.launchAppStore(id: 452186370)
+                        }
                     } else {
-//                        let baiduScheme = URL(string: "baidumap://")!
-//                        if UIApplication.shared.canOpenURL(baiduScheme) {
-//                            //调用百度
-//                            let url =  "baidumap://map/direction?&destination=latlng:\(latitude),\(longitude)|name:\(address)&mode=driving" //transit, walking
-//                            self.launchScheme(urlString: url)
-//                        } else {
-                            //调用本机, 使用地址导航
-                            let current = MKMapItem.forCurrentLocation()
-                            let target = MKMapItem(placemark: MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: latitude, longitude: longitude)))
-                            target.name = address
-                            MKMapItem.openMaps(with: [current, target], launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving])
-//                        }
+                        let current = MKMapItem.forCurrentLocation()
+                        let target = MKMapItem(placemark: MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: latitude, longitude: longitude)))
+                        target.name = address
+                        MKMapItem.openMaps(with: [current, target], launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving])
                     }
-
-
-
-
-                    //                    MKMapItem *currentLocation = [MKMapItem mapItemForCurrentLocation];
-                    //                    MKMapItem *toLocation = [[MKMapItem alloc] initWithPlacemark:[[MKPlacemark alloc] initWithCoordinate:CLLocationCoordinate2DMake(self.lat.floatValue, self.lon.floatValue) addressDictionary:nil]]; //目的地坐标
-                    //                        toLocation.name = self.destination; //目的地名字
-                    //                    [MKMapItem openMapsWithItems:@[currentLocation, toLocation] launchOptions:@{MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeWalking,MKLaunchOptionsShowsTrafficKey: [NSNumber numberWithBool:NO]}];
-
-
-                } else if (call.method == "launchQueryRoute") {
-
-
-
                 } else {
                     result(nil)
                 }
@@ -85,6 +76,20 @@ import MapKit
         }
 
         return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    }
+
+    private func launchAppStore(id: Int) {
+        let url = URL(string: "itms-apps://itunes.apple.com/app/id\(id)")
+        if !UIApplication.shared.canOpenURL(url!) {
+            return
+        }
+        if #available(iOS 10.0, *) {
+            UIApplication.shared.open(url!, options: [:]) { (success) in
+
+            }
+        } else {
+            UIApplication.shared.openURL(url!)
+        }
     }
 
     private func launchScheme(urlString: String) {

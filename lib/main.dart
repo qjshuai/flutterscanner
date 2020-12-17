@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:environment/app_bloc.dart';
 import 'package:environment/app_repository.dart';
 import 'package:environment/app_state.dart';
-import 'package:environment/database_type.dart';
 import 'package:environment/environment.dart';
 import 'package:environment/http.dart';
 import 'package:environment/preference_type.dart';
@@ -16,7 +15,6 @@ import 'package:get_it/get_it.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sqflite/sqflite.dart';
 import 'utils/bloc_observer.dart';
 import 'utils/custom_color.dart';
 import 'utils/error_envelope.dart';
@@ -42,7 +40,7 @@ Future<List<BlocProvider>> setup() async {
     } else {
       final env = Environment(
           name: 'development',
-          baseUrl: 'http://172.16.178.16:8081',
+          baseUrl: 'https://wechat.roshinediy.com',//http://172.16.178.16:8081
           isDebug: true,
           logMode: LogMode.verbose);
       defaultState = AppState(settings: settings, environment: env);
@@ -55,7 +53,7 @@ Future<List<BlocProvider>> setup() async {
       //生产环境使用默认环境设置
       appState = appState.update(environment: defaultState.environment);
     }
-
+    appState = appState.update(environment: defaultState.environment);
     final getIt = GetIt.instance;
     if (inProduction) {
       getIt.registerSingleton<ServiceCenter>(
