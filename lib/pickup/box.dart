@@ -3,6 +3,7 @@ import 'package:scanner/receipt/receipt_info.dart';
 class Box {
   final int orderId;
   final String orderCode;
+  final String serviceCode;
   final String nickname;
 
   // 6 待入袋 7 待揽收
@@ -42,6 +43,7 @@ class Box {
       this.latitude,
       this.longitude,
       this.address,
+      this.serviceCode,
       this.features});
 
   String get subTitle {
@@ -63,6 +65,7 @@ class Box {
       latitude: json['latitude'],
       longitude: json['longitude'],
       tel: json['tel'],
+      serviceCode: json['serviceCode'],
       headImgUrl: json['headImgUrl'],
       address: json['address'],
       features: (json['features'] as List<dynamic>)

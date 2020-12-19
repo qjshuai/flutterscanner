@@ -346,7 +346,7 @@ class _PickupListPageState extends State<PickupListPage> {
                         ),
                         SizedBox(height: 2),
                         Text(
-                          '服务码: ${box.orderCode}',
+                          '服务码: ${box.serviceCode}',
                           style: Theme.of(context)
                               .primaryTextTheme
                               .bodyText1

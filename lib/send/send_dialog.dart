@@ -10,6 +10,7 @@ import 'package:scanner/utils/constants.dart';
 import 'package:scanner/utils/scan_state.dart';
 import 'package:scanner/widgets/alert.dart';
 import 'package:scanner/widgets/toast.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../widgets/buttons_bar.dart';
 import '../utils/error_envelope.dart';
 
@@ -70,9 +71,9 @@ class _SendDialogState extends State<SendDialog> {
     }
     //开始获取信息
     print('开始获取订单信息');
-   setState(() {
-     _scanState = FetchingState();
-   });
+    setState(() {
+      _scanState = FetchingState();
+    });
     try {
       final order = await _fetchOrder(code);
       print('获取订单信息成功');
@@ -148,72 +149,116 @@ class _SendDialogState extends State<SendDialog> {
                   height: 60,
                   child: _buildSelectedStation(),
                 ),
-                Expanded(child: SingleChildScrollView(
+                Expanded(
+                    child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                    SizedBox(height: 30),
-                    Text(
-                      orderTitle ?? '',
-                      style: TextStyle(
-                          color: Theme.of(context).primaryColor,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500),
-                    ),
-                    Text(
-                      '洁品信息',
-                      textAlign: TextAlign.start,
-                      style: TextStyle(
-                        color: Color(0xFF8C9C9D),
-                        fontSize: 13,
+                      SizedBox(height: 30),
+                      Text(
+                        orderTitle ?? '',
+                        style: TextStyle(
+                            color: Theme.of(context).primaryColor,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500),
                       ),
-                    ),
-                    SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${_order?.actuallyPrice ?? 0}',
-                                  style: TextStyle(
-                                      color: Theme.of(context).primaryColor,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w500),
+                      Text(
+                        '洁品信息',
+                        textAlign: TextAlign.start,
+                        style: TextStyle(
+                          color: Color(0xFF8C9C9D),
+                          fontSize: 13,
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                              child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${_order?.actuallyPrice ?? 0}',
+                                style: TextStyle(
+                                    color: Theme.of(context).primaryColor,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w500),
+                              ),
+                              Text(
+                                '价格',
+                                style: TextStyle(
+                                  color: Color(0xFF8C9C9D),
+                                  fontSize: 13,
                                 ),
-                                Text(
-                                  '价格',
-                                  style: TextStyle(
-                                    color: Color(0xFF8C9C9D),
-                                    fontSize: 13,
+                              ),
+                            ],
+                          )),
+                          Expanded(
+                              child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${_order?.orderDetails?.length ?? 0}',
+                                style: TextStyle(
+                                    color: Theme.of(context).primaryColor,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w500),
+                              ),
+                              Text(
+                                '数量',
+                                style: TextStyle(
+                                  color: Color(0xFF8C9C9D),
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          )),
+                        ],
+                      ),
+                      Visibility(
+                          visible: isNotEmpty(_order.tel),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(height: 20),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    _order.tel ?? '无',
+                                    style: TextStyle(
+                                        color: Theme.of(context).primaryColor,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w500),
                                   ),
+                                  CupertinoButton(
+                                      padding: EdgeInsets.zero,
+                                      // iconSize: 20,
+                                      child: Image.asset('assets/images/pickup_call.png',
+                                          width: 29, height: 29),
+                                      onPressed: () async {
+                                        final scheme = 'tel:${_order.tel}';
+                                        if (await canLaunch(scheme)) {
+                                          await launch(scheme);
+                                        } else {
+                                          showToast("不支持拨打电话");
+                                        }
+                                      }),
+                                ],
+                              ),
+                              Text(
+                                '电话',
+                                textAlign: TextAlign.start,
+                                style: TextStyle(
+                                  color: Color(0xFF8C9C9D),
+                                  fontSize: 13,
                                 ),
-                              ],
-                            )),
-                        Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${_order?.orderDetails?.length ?? 0}',
-                                  style: TextStyle(
-                                      color: Theme.of(context).primaryColor,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w500),
-                                ),
-                                Text(
-                                  '数量',
-                                  style: TextStyle(
-                                    color: Color(0xFF8C9C9D),
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            )),
-                      ],
-                    )
-                  ],),
+                              )
+                            ],
+                          )),
+                    ],
+                  ),
                 )),
                 _buildBottomBar(context),
               ],

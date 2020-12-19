@@ -1,5 +1,6 @@
 class SendOrder {
   final String orderIds;
+  final String tel;
   final List<SendOrderDetails> orderDetails;
   final int defaultPostStationId;
   final List<SendStation> stationList;
@@ -10,6 +11,7 @@ class SendOrder {
   SendOrder.fromJson(Map<String, dynamic> json)
       : defaultPostStationId = json['defaultPostStationId'],
         orderIds = null,
+        tel = json['tel'],
         actuallyPrice = checkDouble(json['actuallyPrice']),
         orderDetails = (json['orderDetails'] as List<dynamic>)
             ?.map((e) => SendOrderDetails.fromJson(e))
@@ -22,6 +24,7 @@ class SendOrder {
       : defaultPostStationId = json['defaultPostStationId'],
         actuallyPrice = checkDouble(json['actuallyPrice']),
         orderIds = json['orderIds'],
+        tel = json['tel'],
         orderDetails = (json['details'] as List<dynamic>)
             ?.map((e) => SendOrderDetails.fromJson(e))
             ?.toList() ?? [],
