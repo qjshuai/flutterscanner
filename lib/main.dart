@@ -40,12 +40,12 @@ Future<List<BlocProvider>> setup() async {
     } else {
       final env = Environment(
           name: 'development',
-          baseUrl: 'http://172.16.178.16:8081',//http://172.16.178.16:8081
+          baseUrl: 'http://172.16.179.34:8081',//http://172.16.178.16:8081
           isDebug: true,
           logMode: LogMode.verbose);
       defaultState = AppState(settings: settings, environment: env);
     }
-    AppState appState = await AppRepository.fromStorage(preferenceBox);
+    AppState appState = null; //await AppRepository.fromStorage(preferenceBox);
 
     if (appState == null) {
       appState = defaultState;

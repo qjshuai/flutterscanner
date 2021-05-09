@@ -55,16 +55,21 @@ class Box {
   }
 
   factory Box.fromJson(Map<String, dynamic> json) {
+    print(json['tel']);
     return Box(
       orderId: json['orderId'],
       parcelNum: json['parcelNum'],
       orderCode: json['orderCode'],
       nickname: json['nickname'],
       status: json['status'],
+      tel: json['tel'],
       statusName: json['statusName'],
       latitude: json['latitude'],
       longitude: json['longitude'],
-      tel: json['tel'],
+      pics: (json['pics'] as List<dynamic>)
+          ?.map((e) => e as String)
+          ?.toList() ??
+          [],
       serviceCode: json['serviceCode'],
       headImgUrl: json['headImgUrl'],
       address: json['address'],

@@ -1,15 +1,18 @@
 import 'dart:ui';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:environment/service_center.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:get_it/get_it.dart';
+import 'package:photo_view/photo_view_gallery.dart';
 import 'package:quiver/strings.dart';
 import 'package:scanner/widgets/alert.dart';
 import 'package:scanner/utils/constants.dart';
 import '../widgets/buttons_bar.dart';
 import '../utils/error_envelope.dart';
 import 'box.dart';
+import 'package:photo_view/photo_view.dart';
 
 /// 收件
 Future<bool> showPickupDialog(BuildContext context, {Box box}) {
@@ -181,17 +184,19 @@ class _PickupDialogState extends State<PickupDialog> {
   /// 订单信息
   Widget _buildOrder(BuildContext context) {
     final box = widget.box;
+    final link = (box.pics ?? []).isNotEmpty;
+    print('box.featuresString${box.featuresString}');
     var children = [
       SizedBox(height: 20),
       Row(
         children: [
-          Expanded(flex: 4,child: _buildCell('客户名', box.nickname ?? '无')),
-          Expanded(flex: 5,child: _buildCell('手机号', box.tel ?? '无')),
+          Expanded(flex: 4, child: _buildCell('客户名', box.nickname ?? '无')),
+          Expanded(flex: 5, child: _buildCell('手机号', box.tel ?? '无')),
         ],
       ),
       _buildCell('订单号', box.orderCode ?? '无'),
       _buildCell('洁品信息', box.subTitle ?? '无'),
-      _buildCell('洁品备注', box.featuresString ?? '无'),
+      _buildCell('洁品备注', box.featuresString ?? (link ? '查看附件' : '无'), link: link),
       _buildCell('上门地址', box.address ?? '无'),
     ];
     // if (_status == PickupStatus.pick) {
@@ -260,15 +265,63 @@ class _PickupDialogState extends State<PickupDialog> {
         child: ExpandedButtonsBar(info));
   }
 
-  Widget _buildCell(String top, String bottom) {
+  Widget _buildCell(String top, String bottom, {bool link = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(bottom ?? '',
-            style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF253334))),
+        link
+            ? CupertinoButton(
+                padding: EdgeInsets.zero,
+                child: Text(bottom ?? '',
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        decoration: TextDecoration.underline,
+                        decorationColor: Colors.blue,
+                        color: Colors.blue)),
+                onPressed: () {
+                  final pics = widget.box.pics ?? [];
+                  showDialog(
+                      context: context,
+                      builder: (context) {
+                        return PhotoViewGallery.builder(
+                          scrollPhysics: const BouncingScrollPhysics(),
+                          builder: (BuildContext context, int index) {
+                            return PhotoViewGalleryPageOptions(
+                                imageProvider:
+                                    CachedNetworkImageProvider(pics[index]),
+                                initialScale:
+                                    PhotoViewComputedScale.contained * 0.8,
+                                onTapDown: (_, __, ___) {
+                                  Navigator.of(context).pop();
+                                }
+                                // heroAttributes: PhotoViewHeroAttributes(tag: galleryItems[index].id),
+                                );
+                          },
+                          itemCount: pics.length,
+                          loadingBuilder: (context, event) => Center(
+                            child: Container(
+                              width: 20.0,
+                              height: 20.0,
+                              child: CircularProgressIndicator(
+                                value: event == null
+                                    ? 0
+                                    : event.cumulativeBytesLoaded /
+                                        event.expectedTotalBytes,
+                              ),
+                            ),
+                          ),
+                          // backgroundDecoration: widget.backgroundDecoration,
+                          // pageController: widget.pageController,
+                          // onPageChanged: onPageChanged,
+                        );
+                      });
+                })
+            : Text(bottom ?? '',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF253334))),
         SizedBox(
           height: 2,
         ),

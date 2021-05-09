@@ -8,6 +8,7 @@ import android.os.Vibrator;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -35,6 +36,7 @@ public class ScannerActivity extends AppCompatActivity implements QRCodeView.Del
 
     private ZBarView mZXingView;
     private Button cancelButton;
+    private Button photoButton;
     private Button lightButton;
     private boolean isLight = false;
 
@@ -46,6 +48,7 @@ public class ScannerActivity extends AppCompatActivity implements QRCodeView.Del
         mZXingView = findViewById(R.id.zbarview);
         mZXingView.setDelegate(this);
 
+        photoButton = findViewById(R.id.camera_photo_button);
         cancelButton = findViewById(R.id.camera_cancel_button);
         lightButton = findViewById(R.id.camera_light_button);
 
@@ -58,6 +61,19 @@ public class ScannerActivity extends AppCompatActivity implements QRCodeView.Del
         lightButton.setOnClickListener(v -> {
             switchLight();
         });
+        photoButton.setOnClickListener(v -> {
+            pickPhoto();
+        });
+    }
+
+    private void pickPhoto() {
+        Intent photoPickerIntent = new BGAPhotoPickerActivity.IntentBuilder(this)
+                .cameraFileDir(null)
+                .maxChooseCount(1)
+                .selectedPhotos(null)
+                .pauseOnScroll(false)
+                .build();
+        startActivityForResult(photoPickerIntent, REQUEST_CODE_CHOOSE_QRCODE_FROM_GALLERY);
     }
 
     private void switchLight() {
@@ -101,6 +117,10 @@ public class ScannerActivity extends AppCompatActivity implements QRCodeView.Del
 
     @Override
     public void onScanQRCodeSuccess(String result) {
+        if (result == null || result.isEmpty()) {
+            Toast.makeText(this, "未识别到二维码", Toast.LENGTH_SHORT).show();
+            return;
+        }
         Log.i(TAG, "result:" + result);
         setTitle("扫描结果为：" + result);
         vibrate();
@@ -254,10 +274,10 @@ public class ScannerActivity extends AppCompatActivity implements QRCodeView.Del
         mZXingView.startSpotAndShowRect(); // 显示扫描框，并开始识别
 
         if (resultCode == Activity.RESULT_OK && requestCode == REQUEST_CODE_CHOOSE_QRCODE_FROM_GALLERY) {
-            final String picturePath = BGAPhotoPickerActivity.getSelectedPhotos(data).get(0);
+            String picturePath = BGAPhotoPickerActivity.getSelectedPhotos(data).get(0);
+            
             // 本来就用到 QRCodeView 时可直接调 QRCodeView 的方法，走通用的回调
             mZXingView.decodeQRCode(picturePath);
-
             /*
             没有用到 QRCodeView 时可以调用 QRCodeDecoder 的 syncDecodeQRCode 方法
 

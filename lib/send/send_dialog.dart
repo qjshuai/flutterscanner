@@ -194,6 +194,7 @@ class _SendDialogState extends State<SendDialog> {
                               ),
                             ],
                           )),
+                          SizedBox(height: 20),
                           Expanded(
                               child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,6 +217,29 @@ class _SendDialogState extends State<SendDialog> {
                           )),
                         ],
                       ),
+                      Visibility(
+                          visible: widget.mode == SendMode.send && isNotEmpty(_order.addressDetail),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(height: 20),
+                          Text(
+                            _order.addressDetail ?? '',
+                            style: TextStyle(
+                                color: Theme.of(context).primaryColor,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500),
+                          ),
+                          Text(
+                            '上门地址',
+                            textAlign: TextAlign.start,
+                            style: TextStyle(
+                              color: Color(0xFF8C9C9D),
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      )),
                       Visibility(
                           visible: isNotEmpty(_order.tel),
                           child: Column(

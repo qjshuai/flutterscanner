@@ -2,6 +2,7 @@ class SendOrder {
   final String orderIds;
   final String tel;
   final List<SendOrderDetails> orderDetails;
+  final String addressDetail;
   final int defaultPostStationId;
   final List<SendStation> stationList;
   final double actuallyPrice;
@@ -12,6 +13,7 @@ class SendOrder {
       : defaultPostStationId = json['defaultPostStationId'],
         orderIds = null,
         tel = json['tel'],
+        addressDetail = json['addressDetail'],
         actuallyPrice = checkDouble(json['actuallyPrice']),
         orderDetails = (json['orderDetails'] as List<dynamic>)
             ?.map((e) => SendOrderDetails.fromJson(e))
@@ -24,6 +26,7 @@ class SendOrder {
       : defaultPostStationId = json['defaultPostStationId'],
         actuallyPrice = checkDouble(json['actuallyPrice']),
         orderIds = json['orderIds'],
+        addressDetail = json['addressDetail'],
         tel = json['tel'],
         orderDetails = (json['details'] as List<dynamic>)
             ?.map((e) => SendOrderDetails.fromJson(e))
